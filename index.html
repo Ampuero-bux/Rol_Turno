@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Rol de Turnos Semanal</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+body { font-family: 'Segoe UI', sans-serif; background: #f3f6fa; margin:0; padding:0; }
+h1 { text-align:center; background:#004080; color:white; padding:10px 0; margin:0; }
+.main-container { display:flex; gap:20px; padding:20px; }
+.users-panel { width:220px; background:#e1e9f5; border-radius:10px; padding:15px; box-shadow:0 2px 5px rgba(0,0,0,0.2); height:fit-content; }
+.users-panel h2 { text-align:center; font-size:18px; margin-bottom:10px; }
+.user-container { position: relative; display:flex; justify-content:space-between; align-items:center; padding-right:5px; }
+.user { border-radius:8px; padding:8px; cursor:pointer; text-align:center; color:white; font-weight:600; transition: transform 0.2s; flex-grow:1; }
+.user:hover { transform: scale(1.05); }
+.counter { background:white; color:black; border-radius:50%; width:20px; height:20px; text-align:center; line-height:20px; font-size:12px; margin-left:5px; }
+.delete-btn { background: rgba(255,255,255,0.7); border:none; border-radius:50%; width:18px; height:18px; cursor:pointer; font-weight:bold; color:#333; font-size:12px; line-height:16px; padding:0; margin-left:5px; }
+select { width:100%; padding:5px; margin-top:5px; border-radius:5px; border:1px solid #ccc; box-sizing:border-box; }
+button { margin-top:10px; padding:10px 20px; background:#004080; color:white; border:none; border-radius:8px; cursor:pointer; transition: background 0.3s; width:100%; }
+button:hover { background:#0059b3; }
+.schedule-container { flex-grow:1; background:white; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); padding:10px; overflow-x:auto; }
+table { border-collapse:collapse; width:100%; text-align:center; }
+th, td { border:1px solid #ccc; padding:8px; font-size:14px; vertical-align:top; }
+th { background:#dbe7ff; font-weight:bold; }
+td.turno { background:#d8e4f8; font-weight:bold; width:120px; }
+td.area { background:#f1f5fb; font-weight:600; width:100px; }
+td.bloque { min-height:60px; cursor:pointer; transition: background 0.3s; }
+td.bloque:hover { background:#f0f8ff; }
+.usuarios-lista { display:flex; flex-direction:column; gap:3px; }
+.asignado { border-radius:6px; color:white; padding:4px 6px; font-size:13px; font-weight:bold; cursor:pointer; user-select:none; text-align:center; }
+.asignado .nombre { font-weight:bold; }
+.asignado .subtitulo { font-size:11px; opacity:0.8; }
+
+
+/* Contenedor elegante del subtítulo */
+.subtitulo-box {
+  margin-top: 12px;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+}
+.subtitulo-box.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Etiqueta flotante */
+.subtitulo-label {
+  display: block;
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Selector personalizado */
+.subtitulo-select {
+  width: 160px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background-color: #fdfdfd;
+  font-size: 14px;
+  color: #333;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+}
+.subtitulo-select:hover {
+  border-color: #888;
+}
+.subtitulo-select:focus {
+  outline: none;
+  border-color: #0078ff;
+  box-shadow: 0 0 0 3px rgba(0,120,255,0.15);
+}
+
+/* Oculto por defecto */
+.hidden {
+  display: none;
+}
+
+/* Modal Mejorado */
+.modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(3px); transition: opacity 0.3s ease; }
+.modal-content { background-color: #fff; margin: 10% auto; padding: 25px 20px; border-radius: 12px; width: 350px; max-width: 90%; box-shadow: 0 8px 25px rgba(0,0,0,0.3); text-align: center; transform: translateY(-50px); opacity: 0; transition: all 0.3s ease; }
+
+.modal.show .modal-content { transform: translateY(0); opacity: 1; }
+.close { color: #999; float: right; font-size: 22px; font-weight: bold; cursor: pointer; transition: color 0.2s; }
+.close:hover { color: #333; }
+.modal-content h3 { margin-top:0; margin-bottom:15px; font-family:'Segoe UI',sans-serif; font-weight:600; color:#004080; }
+.modal-content input[type="text"], .modal-content input[type="color"] { width:90%; padding:8px 10px; margin-bottom:15px; border-radius:8px; border:1px solid #ccc; font-size:14px; transition:border-color 0.2s; }
+.modal-content input[type="text"]:focus { border-color:#004080; outline:none; box-shadow:0 0 5px rgba(0,64,128,0.3); }
+.modal-btn { width:100%; padding:10px; background:#004080; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold; transition: background 0.3s, transform 0.2s; }
+.modal-btn:hover { background:#0059b3; transform: translateY(-2px); }
+
+footer {
+  width: 100%;
+  background-color: #004080;
+  color: white;
+  text-align: center;
+  padding: 12px 0;
+  font-size: 14px;
+  position: relative; /* puedes cambiar a fixed si quieres que siempre esté visible */
+  bottom: 0;
+  position: fixed;
+bottom: 0;
+left: 0;
+z-index: 100;
+
+}
+
+</style>
+</head>
+<body>
+<h1>📋 Rol de Turno Semanal</h1>
+
+<div class="main-container">
+  <div class="users-panel">
+    <h2>Usuarios</h2>
+    <div id="users-list"></div>
+
+    <div id="subtitulo-container" class="subtitulo-box hidden">
+      <label for="subtitulo-selector" class="subtitulo-label">Modo de trabajo</label>
+      <select id="subtitulo-selector" class="subtitulo-select">
+        <option value="">— Ninguno —</option>
+        <option value="Central">Central</option>
+        <option value="OnCall">OnCall</option>
+        <option value="Remoto">Remoto</option>
+      </select>
+    </div>
+    
+
+    <hr>
+    <button onclick="openModal()">➕ Agregar Usuario</button>
+    <button onclick="clearSelection()">Deseleccionar</button>
+    <button onclick="clearAll()">🧹 Limpiar todo</button>
+    <button onclick="saveAsImage()">💾 Guardar como imagen</button>
+    <button onclick="exportUserSummary()">📈 Exportar resumen a Excel</button>
+    <br>
+    <br>
+     <br>
+    <br>
+    <button onclick="openWeekendModal()">🌙 Fines de semana</button>
+  </div>
+
+  <div class="schedule-container" id="schedule-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Turno</th>
+          <th>Week</th>
+          <th>Lunes</th>
+          <th>Martes</th>
+          <th>Miércoles</th>
+          <th>Jueves</th>
+          <th>Viernes</th>
+          <th>Sábado</th>
+          <th>Domingo</th>
+        </tr>
+      </thead>
+      <tbody id="schedule-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h3>Agregar Usuario</h3>
+    <input type="text" id="modal-username" placeholder="Nombre del usuario">
+    <input type="color" id="modal-usercolor" value="#0074D9">
+    <button class="modal-btn" onclick="saveModalUser()">Guardar</button>
+  </div>
+</div>
+<!-- Modal fines de semana -->
+
+<div id="weekend-modal" class="modal">
+  <div class="modal-content" style="width: 1000px; max-width: 95%;">
+    <span class="close" onclick="closeWeekendModal()">&times;</span>
+    <h3>Fines de semana</h3>
+    <div style="display:flex; gap:20px;">
+      <!-- Panel de usuarios -->
+      <div class="users-panel" style="width:200px;">
+        <h4>Usuarios</h4>
+        <div id="weekend-users-list"></div>
+        <div id="weekend-subtitulo-container" class="subtitulo-box hidden">
+          <label for="weekend-subtitulo-selector" class="subtitulo-label">Modo de trabajo</label>
+          <select id="weekend-subtitulo-selector" class="subtitulo-select">
+            <option value="">— Ninguno —</option>
+            <option value="Central">Central</option>
+            <option value="OnCall">OnCall</option>
+            <option value="Remoto">Remoto</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tabla fines de semana -->
+      <div id="weekend-container" style="flex-grow:1; overflow-x:auto;"></div>
+    </div>
+    
+  </div>
+</div>
+<!-- Contenedor del subtítulo y deselect -->
+<div id="weekend-modal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeWeekendModal()">&times;</span>
+    <h2>Fines de Semana</h2>
+
+    <!-- Lista de usuarios -->
+    <div id="weekend-users-list" style="display:flex; gap:5px; flex-wrap:wrap;"></div>
+
+    <!-- Selector de Central/Remoto/OnCall y botón Deseleccionar -->
+    <div id="weekend-subtitulo-container" class="hidden" style="margin-top:10px;">
+      <select id="weekend-subtitulo-selector">
+        <option value="">-- Seleccionar --</option>
+        <option value="Central">Central</option>
+        <option value="Remoto">Remoto</option>
+        <option value="OnCall">OnCall</option>
+      </select>
+      <button id="weekend-deselect-btn">Deseleccionar</button>
+    </div>
+
+    <!-- Tabla de fines de semana -->
+    <div id="weekend-container" style="margin-top:15px;"></div>
+  </div>
+</div>
+
+
+<script>
+  const turns = [
+    { name: "1er Turno", time: "6:00 - 14:00" },
+    { name: "2do Turno", time: "14:00 - 21:30" },
+    { name: "3er Turno", time: "21:30 - 00:00" }
+  ];
+  const areas = ["FD","BD (FIS)", "BD (MMS)", "BD (UPS)", "BD (SAP)"];
+  const tbody = document.getElementById("schedule-body");
+  const usersList = document.getElementById("users-list");
+  let selectedUser = null;
+  let selectedColor = null;
+  
+  // ====== Cabecera de días con fechas ======
+  const dias = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+  const today = new Date();
+  const primerDiaSemana = new Date(today);
+  primerDiaSemana.setDate(today.getDate() - today.getDay() + 1); // lunes
+  
+  dias.forEach((dia,i)=>{
+      const th = document.querySelector(`thead tr th:nth-child(${i+3})`);
+      const fecha = new Date(primerDiaSemana);
+      fecha.setDate(primerDiaSemana.getDate() + i);
+      th.innerText = `${dia} ${fecha.getDate()}`;
+  });
+  
+  // ====== Mostrar Week X en la columna Week ======
+  const firstJan = new Date(today.getFullYear(),0,1);
+  const weekNum = Math.ceil((((today - firstJan) / 86400000) + firstJan.getDay() + 1)/7);
+  const thWeek = document.querySelector("thead tr th:nth-child(2)"); // columna Week
+  thWeek.innerText = `Week ${weekNum}`;
+  thWeek.style.color = "#004080";
+  thWeek.style.fontWeight = "bold";
+  
+  // ====== Crear tabla de turnos y áreas ======
+  turns.forEach(turn => {
+    areas.forEach((area, index) => {
+      const tr = document.createElement("tr");
+  
+      // Columna Turno
+      if(index === 0){
+        const tdTurno = document.createElement("td");
+        tdTurno.className = "turno";
+        tdTurno.rowSpan = areas.length;
+        tdTurno.innerHTML = `${turn.name}<br><small>${turn.time}</small>`;
+        tr.appendChild(tdTurno);
+      }
+  
+      // Columna Área
+      const tdArea = document.createElement("td");
+      tdArea.className = "area";
+      tdArea.innerText = area;
+      tr.appendChild(tdArea);
+  
+      // Columnas de días
+      for(let i=0; i<7; i++){
+        const td = document.createElement("td");
+        td.className = "bloque";
+        const contenedor = document.createElement("div");
+        contenedor.className = "usuarios-lista";
+        td.appendChild(contenedor);
+        td.onclick = () => assignUser(contenedor);
+        tr.appendChild(td);
+      }
+  
+      tbody.appendChild(tr);
+    });
+  });
+  
+  // ====== Persistencia ======
+  function saveUsersToStorage(){
+    const usuarios = Array.from(document.querySelectorAll('.user')).map(u=>({name:u.innerText,color:u.style.background}));
+    localStorage.setItem('usuarios',JSON.stringify(usuarios));
+  }
+  
+  function loadUsersFromStorage(){
+    const data = JSON.parse(localStorage.getItem('usuarios')||'[]');
+    data.forEach(u=>createUserElement(u.name,u.color));
+  }
+  
+  function saveAssignmentsToStorage(){
+    const assignments = [];
+    document.querySelectorAll('.bloque').forEach(td=>{
+      const usuarios = Array.from(td.querySelectorAll('.asignado')).map(span=>({
+        name: span.querySelector('.nombre').innerText,
+        color: span.style.background,
+        subtitulo: span.querySelector('.subtitulo')?.innerText||""
+      }));
+      assignments.push(usuarios);
+    });
+    localStorage.setItem('asignaciones',JSON.stringify(assignments));
+    updateCounters();
+  }
+  
+  function loadAssignmentsFromStorage(){
+    const assignments = JSON.parse(localStorage.getItem('asignaciones')||'[]');
+    const bloques = document.querySelectorAll('.bloque');
+    assignments.forEach((usuarios,i)=>{
+      const container = bloques[i].querySelector('.usuarios-lista');
+      usuarios.forEach(u=>{
+        const span = document.createElement("span");
+        span.className="asignado";
+        span.style.background=u.color;
+        const nombreDiv = document.createElement("div");
+        nombreDiv.className="nombre";
+        nombreDiv.innerText=u.name;
+        span.appendChild(nombreDiv);
+        if(u.subtitulo){
+          const subDiv = document.createElement("div");
+          subDiv.className="subtitulo";
+          subDiv.innerText=u.subtitulo;
+          span.appendChild(subDiv);
+        }
+        span.onclick=function(e){ e.stopPropagation(); if(confirm(`Eliminar a ${u.name}?`)){ span.remove(); saveAssignmentsToStorage(); } };
+        container.appendChild(span);
+      });
+    });
+    updateCounters();
+  }
+  
+  // ====== Usuarios ======
+  function createUserElement(name,color){
+    const container = document.createElement("div");
+    container.className="user-container";
+    const userDiv = document.createElement("div");
+    userDiv.className="user";
+    userDiv.style.background=color;
+    userDiv.innerText=name;
+    userDiv.onclick = ()=>selectUser(userDiv);
+  
+    const counter = document.createElement("div");
+    counter.className="counter";
+    counter.innerText="0";
+  
+    const delBtn = document.createElement("button");
+    delBtn.className="delete-btn";
+    delBtn.innerText="×";
+    // Eliminar usuario en la lista principal
+delBtn.onclick = (e) => {
+  e.stopPropagation();
+  if(confirm(`Eliminar usuario ${name}?`)){
+    container.remove(); // quita de la UI
+    // Eliminar asignaciones de ese usuario en la tabla
+    document.querySelectorAll('.asignado .nombre').forEach(n => {
+      if(n.innerText === name) n.parentElement.remove();
+    });
+    saveAssignmentsToStorage(); // actualizar asignaciones
+    saveUsersToStorage();       // **guardar usuarios actualizados**
+    if(selectedUser === name) clearSelection();
+  }
+};
+
+  
+    container.appendChild(userDiv);
+    container.appendChild(counter);
+    container.appendChild(delBtn);
+    usersList.appendChild(container);
+    saveUsersToStorage();
+    updateCounters();
+  }
+  
+  // ====== Modal ======
+  const modal = document.getElementById("modal");
+  function openModal(){ modal.style.display='block'; setTimeout(()=> modal.classList.add('show'),10);}
+  function closeModal(){ modal.classList.remove('show'); setTimeout(()=> modal.style.display='none',300);}
+  window.onclick=function(event){ if(event.target==modal) closeModal(); }
+  
+  function saveModalUser(){
+    const name=document.getElementById('modal-username').value.trim();
+    const color=document.getElementById('modal-usercolor').value;
+    if(!name) return alert("Ingresa un nombre");
+    createUserElement(name,color);
+    closeModal();
+  }
+  
+  // ====== Selección ======
+  function selectUser(el) {
+    document.querySelectorAll('.user').forEach(u => u.style.outline = 'none');
+    el.style.outline = '3px solid #000';
+    selectedUser = el.innerText;
+    selectedColor = el.style.background;
+    
+    const cont = document.getElementById('subtitulo-container');
+    cont.classList.remove('hidden');
+    setTimeout(() => cont.classList.add('show'), 10);
+  }
+  
+  function clearSelection() {
+    selectedUser = null;
+    document.querySelectorAll('.user').forEach(u => u.style.outline = 'none');
+    
+    const cont = document.getElementById('subtitulo-container');
+    cont.classList.remove('show');
+    setTimeout(() => cont.classList.add('hidden'), 300);
+  }
+  
+  // ====== Asignación de usuarios ======
+  function assignUser(container){
+    if(!selectedUser) return;
+    const yaAsignado = Array.from(container.children).some(u=>u.querySelector('.nombre')?.innerText===selectedUser);
+    if(yaAsignado) return;
+    const span = document.createElement("span");
+    span.className="asignado";
+    span.style.background=selectedColor;
+    const nombreDiv = document.createElement("div");
+    nombreDiv.className="nombre";
+    nombreDiv.innerText=selectedUser;
+    span.appendChild(nombreDiv);
+    const subtitulo=document.getElementById('subtitulo-selector').value;
+    if(subtitulo){
+      const subDiv=document.createElement("div");
+      subDiv.className="subtitulo";
+      subDiv.innerText=subtitulo;
+      span.appendChild(subDiv);
+    }
+    span.onclick=function(e){ e.stopPropagation(); if(confirm(`Eliminar a ${selectedUser}?`)){ span.remove(); saveAssignmentsToStorage(); } };
+    container.appendChild(span);
+    saveAssignmentsToStorage();
+  }
+  
+  // ====== Contadores ======
+  function updateCounters(){
+    const counts={};
+    document.querySelectorAll('.asignado .nombre').forEach(n=>{ counts[n.innerText]=(counts[n.innerText]||0)+1; });
+    document.querySelectorAll('.user-container').forEach(c=>{ const name=c.querySelector('.user').innerText; c.querySelector('.counter').innerText=counts[name]||0; });
+  }
+  
+  // ====== Otras funciones ======
+  function clearAll(){ 
+    if(confirm("¿Seguro que quieres limpiar todo el calendario?")){
+      document.querySelectorAll('.usuarios-lista').forEach(c=>c.innerHTML=""); 
+      saveAssignmentsToStorage(); 
+    } 
+  }
+  
+  function saveAsImage() {
+    const schedule = document.getElementById("schedule-container");
+    if (!schedule) { alert("No se encontró el contenedor del calendario."); return; }
+  
+    html2canvas(schedule, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      useCORS: true
+    })
+    .then(canvas => {
+      canvas.toBlob(blob => {
+        const link = document.createElement("a");
+        link.download = "rol_de_turnos.png";
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }, "image/png");
+    })
+    .catch(err => {
+      console.error("Error al generar la imagen:", err);
+      alert("Ocurrió un error al generar la imagen.");
+    });
+  }
+  
+function exportUserSummary() {
+  if (!confirm("¿Deseas guardar un resumen de usuarios y días asignados?")) return;
+
+  const assignedSpans = document.querySelectorAll(".asignado");
+  if (assignedSpans.length === 0) { 
+    alert("No hay usuarios asignados en el calendario."); 
+    return; 
+  }
+
+  // Contar cuántos bloques tiene cada usuario
+  const counts = {};
+  assignedSpans.forEach(span => {
+    const user = span.querySelector('.nombre').innerText.trim();
+    if (!counts[user]) counts[user] = 0;
+    counts[user]++;
+  });
+
+  // Convertir a CSV
+  let csvContent = "data:text/csv;charset=utf-8,Usuario,Dias Asignados\n";
+  for (const [user, count] of Object.entries(counts)) {
+    csvContent += `"${user}",${count}\n`;
+  }
+
+  // Descargar CSV
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  const fecha = new Date().toISOString().slice(0,10); // fecha de exportación
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `resumen_turnos.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+
+
+
+
+
+
+
+
+function openWeekendModal() {
+  const container = document.getElementById("weekend-container");
+  container.innerHTML = "";
+  const usersListContainer = document.getElementById("weekend-users-list");
+  usersListContainer.innerHTML = "";
+
+  // Clonar usuarios de la tabla principal
+// Clonar usuarios de la tabla principal, pero sin contador ni botón de eliminar
+document.querySelectorAll('.user-container').forEach(c => {
+  const clone = c.cloneNode(true);
+  const userDiv = clone.querySelector('.user');
+
+  // Limpiar el container: quitar contador y delete-btn si existían
+  const counter = clone.querySelector('.counter');
+  if(counter) counter.remove();
+  const delBtn = clone.querySelector('.delete-btn');
+  if(delBtn) delBtn.remove();
+
+  userDiv.onclick = () => selectWeekendUser(userDiv);
+  usersListContainer.appendChild(clone);
+});
+
+
+  document.querySelectorAll('.user').forEach(u => u.style.outline = 'none');
+  selectedWeekendUser = null;
+  selectedWeekendColor = null;
+
+  const diasIndices = [4,5,6]; // viernes, sábado, domingo
+  const table = document.createElement("table");
+  table.style.width = "100%";
+  table.style.borderCollapse = "collapse";
+
+// Cabecera
+const thead = document.createElement("thead");
+const trHead = document.createElement("tr");
+
+// Columna Turno
+const thTurno = document.createElement("th");
+thTurno.innerText = "Turno";
+trHead.appendChild(thTurno);
+
+// Columna Área -> Week X
+const today = new Date();
+const firstJan = new Date(today.getFullYear(),0,1);
+const weekNum = Math.ceil((((today - firstJan) / 86400000 + firstJan.getDay()+1)/7));
+const thWeek = document.createElement("th");
+thWeek.innerText = `Week ${weekNum}`;
+trHead.appendChild(thWeek);
+
+// Días fines de semana
+const dias = ["Viernes","Sábado","Domingo"];
+const primerDiaSemana = new Date(today);
+primerDiaSemana.setDate(today.getDate() - today.getDay() + 5); // viernes
+dias.forEach((dia,i)=>{
+  const fecha = new Date(primerDiaSemana);
+  fecha.setDate(primerDiaSemana.getDate() + i);
+  const th = document.createElement("th");
+  th.innerText = `${dia} ${fecha.getDate()}`;
+  trHead.appendChild(th);
+});
+
+thead.appendChild(trHead);
+table.appendChild(thead);
+
+
+
+  // Filas (por turno y área)
+  const turns = [
+    { name: "1er Turno", time: "6:00 - 14:00" },
+    { name: "2do Turno", time: "14:00 - 21:30" },
+    { name: "3er Turno", time: "21:30 - 00:00" }
+  ];
+  const areas = ["FD","BD (FIS)", "BD (MMS)", "BD (UPS)", "BD (SAP)"];
+  const tbody = document.createElement("tbody");
+
+  turns.forEach(turn => {
+    areas.forEach((area,index) => {
+      const tr = document.createElement("tr");
+
+      if(index === 0){
+        const tdTurno = document.createElement("td");
+        tdTurno.className = "turno";
+        tdTurno.rowSpan = areas.length;
+        tdTurno.innerHTML = `${turn.name}<br><small>${turn.time}</small>`;
+        tr.appendChild(tdTurno);
+      }
+
+      const tdArea = document.createElement("td");
+      tdArea.className = "area";
+      tdArea.innerText = area;
+      tr.appendChild(tdArea);
+
+      for(let i=0; i<diasIndices.length; i++){
+        const td = document.createElement("td");
+        td.className = "bloque";
+        td.style.minHeight = "60px";
+        td.style.border = "1px solid #ccc";
+
+        const contenedor = document.createElement("div");
+        contenedor.className = "usuarios-lista";
+        td.appendChild(contenedor);
+
+        const filaOriginal = document.querySelectorAll("#schedule-body tr")[turns.indexOf(turn)*areas.length + index];
+        if(filaOriginal){
+          const bloqueOriginal = filaOriginal.querySelectorAll("td.bloque")[diasIndices[i]];
+          if(bloqueOriginal){
+            bloqueOriginal.querySelectorAll(".asignado").forEach(u => {
+              contenedor.appendChild(u.cloneNode(true));
+            });
+          }
+        }
+
+        td.onclick = () => assignWeekendUser(contenedor);
+        tr.appendChild(td);
+      }
+
+      tbody.appendChild(tr);
+    });
+  });
+
+  table.appendChild(tbody);
+  container.appendChild(table);
+
+// Crear contenedor de botones debajo de los usuarios (solo si no existe)
+let buttonsContainer = document.getElementById("weekend-buttons-container");
+if(!buttonsContainer){
+  buttonsContainer = document.createElement("div");
+  buttonsContainer.id = "weekend-buttons-container";
+  buttonsContainer.style.marginTop = "10px";
+  buttonsContainer.style.display = "flex";
+  buttonsContainer.style.flexDirection = "column"; // esto pone los botones en columna (uno arriba del otro)
+  buttonsContainer.style.gap = "10px"; // separación vertical entre botones
+
+  // Botón Capturar
+  const btnCapturar = document.createElement("button");
+  btnCapturar.innerText = "Capturar Imagen";
+  btnCapturar.onclick = () => captureWeekendTable();
+  buttonsContainer.appendChild(btnCapturar);
+
+  // Botón Deseleccionar Usuario
+  const btnDeseleccionar = document.createElement("button");
+  btnDeseleccionar.innerText = "Deseleccionar Usuario";
+  btnDeseleccionar.onclick = () => {
+    selectedWeekendUser = null;
+    selectedWeekendColor = null;
+    document.querySelectorAll('#weekend-users-list .user').forEach(u => u.style.outline = 'none');
+    const cont = document.getElementById('weekend-subtitulo-container');
+    cont.classList.remove('show');
+    setTimeout(() => cont.classList.add('hidden'), 300);
+  };
+  buttonsContainer.appendChild(btnDeseleccionar);
+
+  // Agregar botones debajo de los usuarios
+  usersListContainer.parentElement.appendChild(buttonsContainer);
+}
+
+
+
+
+  // Mostrar modal
+  const modal = document.getElementById("weekend-modal");
+  modal.style.display = "block";
+  setTimeout(()=> modal.classList.add("show"), 10);
+}
+
+function closeWeekendModal() {
+  const modal = document.getElementById("weekend-modal");
+  modal.classList.remove("show");
+  setTimeout(()=> modal.style.display="none", 300);
+}
+
+// Captura solo de la tabla y cierra modal después de confirmar
+function captureWeekendTable(){
+  const schedule = document.querySelector("#weekend-container table");
+  if(!schedule) return alert("No se encontró la tabla.");
+
+  html2canvas(schedule, {backgroundColor:'#fff', scale:2, useCORS:true})
+    .then(canvas=>{
+      canvas.toBlob(blob=>{
+        const link = document.createElement("a");
+        link.download = "weekend_turnos.png";
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }, "image/png");
+    }).catch(err=>{ console.error(err); alert("Error al capturar la tabla"); });
+
+  if(confirm("¿Estás seguro de capturar la tabla de fines de semana?")){
+    closeWeekendModal();
+  }
+}
+let selectedWeekendUser = null;
+let selectedWeekendColor = null;
+
+// Mostrar el contenedor cuando se selecciona un usuario
+function selectWeekendUser(el){
+  document.querySelectorAll('#weekend-users-list .user').forEach(u => u.style.outline='none');
+  el.style.outline = '3px solid #000';
+  selectedWeekendUser = el.innerText;
+  selectedWeekendColor = el.style.background;
+
+  // Mostrar selector y botón
+  const cont = document.getElementById('weekend-subtitulo-container');
+  cont.classList.remove('hidden');
+  setTimeout(()=> cont.classList.add('show'), 10);
+}
+
+// Deseleccionar usuario
+document.getElementById('weekend-deselect-btn').onclick = function(){
+  selectedWeekendUser = null;
+  selectedWeekendColor = null;
+  document.querySelectorAll('#weekend-users-list .user').forEach(u => u.style.outline='none');
+
+  const cont = document.getElementById('weekend-subtitulo-container');
+  cont.classList.remove('show');
+  setTimeout(()=> cont.classList.add('hidden'), 300);
+};
+
+
+
+
+
+
+// Asignar usuario a bloque
+function assignWeekendUser(container){
+  if(!selectedWeekendUser) return;
+
+  const yaAsignado = Array.from(container.children).some(u => u.querySelector('.nombre')?.innerText===selectedWeekendUser);
+  if(yaAsignado) return;
+
+  const span = document.createElement("span");
+  span.className = "asignado";
+  span.style.background = selectedWeekendColor;
+
+  const nombreDiv = document.createElement("div");
+  nombreDiv.className = "nombre";
+  nombreDiv.innerText = selectedWeekendUser;
+  span.appendChild(nombreDiv);
+
+  const subtitulo = document.getElementById('weekend-subtitulo-selector').value;
+  if(subtitulo){
+    const subDiv = document.createElement("div");
+    subDiv.className = "subtitulo";
+    subDiv.innerText = subtitulo;
+    span.appendChild(subDiv);
+  }
+
+  span.onclick = function(e){
+    e.stopPropagation();
+    if(confirm(`Eliminar usuario`)){
+      span.remove();
+    }
+  };
+
+  container.appendChild(span);
+}
+
+
+
+
+
+
+
+
+
+  
+  // ====== Inicialización ======
+  window.onload = () => {
+    loadUsersFromStorage();
+    loadAssignmentsFromStorage();
+  };
+  </script>
+  <footer id="footer">
+  📅 Rol de Turnos Semanal -  Derechos reservados @AMPUERO
+</footer>
+</body>
+</html>
