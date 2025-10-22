@@ -240,23 +240,25 @@ z-index: 100;
   const usersList = document.getElementById("users-list");
   let selectedUser = null;
   let selectedColor = null;
-  
-  // ====== Cabecera de días con fechas ======
-  const dias = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
-  const today = new Date();
-  const primerDiaSemana = new Date(today);
-  primerDiaSemana.setDate(today.getDate() - today.getDay() + 1); // lunes
-  
-  dias.forEach((dia,i)=>{
-      const th = document.querySelector(`thead tr th:nth-child(${i+3})`);
-      const fecha = new Date(primerDiaSemana);
-      fecha.setDate(primerDiaSemana.getDate() + i);
-      th.innerText = `${dia} ${fecha.getDate()}`;
-  });
+  // ====== Cabecera de días con fechas (semana siguiente) ======
+const dias = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+const today = new Date();
+const primerDiaSemana = new Date(today);
+
+// Calculamos el lunes de la semana siguiente
+primerDiaSemana.setDate(today.getDate() - today.getDay() + 1 + 7); // lunes siguiente
+
+dias.forEach((dia,i)=>{
+    const th = document.querySelector(`thead tr th:nth-child(${i+3})`);
+    const fecha = new Date(primerDiaSemana);
+    fecha.setDate(primerDiaSemana.getDate() + i);
+    th.innerText = `${dia} ${fecha.getDate()}`;
+});
+
   
   // ====== Mostrar Week X en la columna Week ======
   const firstJan = new Date(today.getFullYear(),0,1);
-  const weekNum = Math.ceil((((today - firstJan) / 86400000) + firstJan.getDay() + 1)/7);
+const weekNum = Math.ceil((((today - firstJan) / 86400000) + firstJan.getDay() + 1)/7) + 1;
   const thWeek = document.querySelector("thead tr th:nth-child(2)"); // columna Week
   thWeek.innerText = `Week ${weekNum}`;
   thWeek.style.color = "#004080";
@@ -806,3 +808,4 @@ function assignWeekendUser(container){
 </footer>
 </body>
 </html>
+
