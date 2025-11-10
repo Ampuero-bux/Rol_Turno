@@ -1,9 +1,13 @@
+
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>Rol de Turnos Semanal</title>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <style>
 body { font-family: 'Segoe UI', sans-serif; background: #f3f6fa; margin:0; padding:0; }
 h1 { text-align:center; background:#004080; color:white; padding:10px 0; margin:0; }
@@ -109,8 +113,94 @@ bottom: 0;
 left: 0;
 z-index: 100;
 
+
+}
+/* ===== Modal Fines de Semana ===== */
+#weekend-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
+#weekend-modal.show {
+  display: flex !important;  /* 🔹 fuerza el uso de flex */
+}
+
+#weekend-modal .modal-content {
+  background: #fff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;        /* 🔹 no crece más del 80% del alto */
+  overflow-y: auto;         /* 🔹 agrega scroll si se llena */
+  padding: 20px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 🔹 barra de scroll personalizada */
+#weekend-modal .modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+#weekend-modal .modal-content::-webkit-scrollbar-thumb {
+  background-color: #aaa;
+  border-radius: 8px;
+}
+
+/* 🔹 lista de usuarios */
+#weekend-users-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+  justify-content: center;
+}
+
+#weekend-users-list .usuario {
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: #fff;
+}
+
+/* Modal de confirmación de captura */
+#confirm-capture-modal {
+  z-index: 2000 !important; /* 🔹 Más alto que cualquier otro modal */
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* oscurecer fondo */
+  justify-content: center;
+  align-items: center;
+}
+
+#confirm-capture-modal.show {
+  display: flex;
+}
+
+#confirm-capture-modal .modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 400px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+}
+
+.modal1 { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; }
+  .modal1-content { background:#fff; margin:15% auto; padding:20px; border-radius:10px; width:300px; text-align:center; }
+</style>
 </style>
 </head>
 <body>
@@ -229,6 +319,40 @@ z-index: 100;
 </div>
 
 
+<!-- Modal Confirmación Captura -->
+<div id="confirm-capture-modal" class="modal">
+  <div class="modal-content" style="max-width: 400px; text-align:center;">
+    <h3>⚠️ Confirmar Captura</h3>
+    <p>¿Estás seguro de capturar?<br>Si capturas, se borrarán los datos actuales.</p>
+    <div style="display:flex; justify-content:center; gap:10px; margin-top:15px;">
+      <button id="cancel-capture-btn" class="modal-btn">Cancelar</button>
+      <button id="accept-capture-btn" class="modal-btn">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal de alerta -->
+<div id="alert-modal" class="modal">
+  <div class="modal-content" style="width:300px; text-align:center;">
+    <span class="close" onclick="closeAlertModal()">&times;</span>
+    <h3>⚠️ Advertencia</h3>
+    <p id="alert-message"></p>
+    <button onclick="closeAlertModal()" class="modal-btn">Aceptar</button>
+  </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div id="confirm-modal" class="modal1">
+  <div class="modal1-content">
+    <p id="confirm-message"></p>
+    <div style="margin-top:15px;">
+      <button id="confirm-cancel">Cancelar</button>
+      <button id="confirm-ok">Aceptar</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const turns = [
     { name: "1er Turno", time: "6:00 - 14:00" },
@@ -240,7 +364,9 @@ z-index: 100;
   const usersList = document.getElementById("users-list");
   let selectedUser = null;
   let selectedColor = null;
-    // ====== Cabecera de días con fechas ======
+
+
+  // ====== Cabecera de días con fechas ======
 const dias = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
 const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 
@@ -258,6 +384,8 @@ dias.forEach((dia, i) => {
 
   th.innerText = `${dia} ${diaNumero} ${mesNombre}`;
 });
+
+
   
   // ====== Mostrar Week X en la columna Week ======
   const firstJan = new Date(today.getFullYear(),0,1);
@@ -330,31 +458,50 @@ const weekNum = Math.ceil((((today - firstJan) / 86400000) + firstJan.getDay() +
   function loadAssignmentsFromStorage(){
     const assignments = JSON.parse(localStorage.getItem('asignaciones')||'[]');
     const bloques = document.querySelectorAll('.bloque');
+
     assignments.forEach((usuarios,i)=>{
+      if(!bloques[i]) return; // ⚠ ignora bloques que no existen
+
       const container = bloques[i].querySelector('.usuarios-lista');
+      if(!container) return; // ⚠ ignora si no encuentra el contenedor
+
       usuarios.forEach(u=>{
         const span = document.createElement("span");
         span.className="asignado";
         span.style.background=u.color;
+
         const nombreDiv = document.createElement("div");
         nombreDiv.className="nombre";
         nombreDiv.innerText=u.name;
         span.appendChild(nombreDiv);
+
         if(u.subtitulo){
           const subDiv = document.createElement("div");
           subDiv.className="subtitulo";
           subDiv.innerText=u.subtitulo;
           span.appendChild(subDiv);
         }
-        span.onclick=function(e){ e.stopPropagation(); if(confirm(`Eliminar a ${u.name}?`)){ span.remove(); saveAssignmentsToStorage(); } };
+
+        span.onclick=function(e){ 
+          e.stopPropagation(); 
+          if(confirm(`Eliminar a ${u.name}?`)){ 
+            span.remove(); 
+            saveAssignmentsToStorage(); 
+          } 
+        };
+
         container.appendChild(span);
       });
     });
+
     updateCounters();
-  }
+}
+
   
   // ====== Usuarios ======
   function createUserElement(name,color){
+    if(Array.from(document.querySelectorAll('.user')).some(u => u.innerText === name)) return;
+
     const container = document.createElement("div");
     container.className="user-container";
     const userDiv = document.createElement("div");
@@ -362,6 +509,8 @@ const weekNum = Math.ceil((((today - firstJan) / 86400000) + firstJan.getDay() +
     userDiv.style.background=color;
     userDiv.innerText=name;
     userDiv.onclick = ()=>selectUser(userDiv);
+    enableUserColorChange(userDiv, name);
+
   
     const counter = document.createElement("div");
     counter.className="counter";
@@ -394,19 +543,83 @@ delBtn.onclick = (e) => {
     updateCounters();
   }
   
-  // ====== Modal ======
+// ====== Doble clic para cambiar color del usuario ======
+function enableUserColorChange(userDiv, name) {
+  userDiv.ondblclick = async (e) => {
+    e.stopPropagation();
+    // Crear input de color temporal
+    const inputColor = document.createElement("input");
+    inputColor.type = "color";
+    inputColor.value = rgbToHex(userDiv.style.background);
+    inputColor.style.position = "fixed";
+    inputColor.style.left = "-9999px"; // fuera de la vista
+    document.body.appendChild(inputColor);
+
+    inputColor.onchange = () => {
+      const newColor = inputColor.value;
+
+      // Cambiar color del usuario en la lista
+      userDiv.style.background = newColor;
+
+      // Cambiar color de todas sus asignaciones en la tabla
+      document.querySelectorAll(".asignado .nombre").forEach(n => {
+        if (n.innerText === name) {
+          n.parentElement.style.background = newColor;
+        }
+      });
+
+      // Guardar cambios
+      saveUsersToStorage();
+      saveAssignmentsToStorage();
+    };
+
+    inputColor.click(); // abrir selector de color
+    setTimeout(() => inputColor.remove(), 1000);
+  };
+}
+
+// Función auxiliar para convertir rgb() a hex
+function rgbToHex(rgb) {
+  if (!rgb) return "#0074D9";
+  const res = rgb.match(/\d+/g);
+  if (!res) return rgb;
+  return "#" + res.slice(0, 3).map(x => {
+    const hex = parseInt(x).toString(16);
+    return hex.length === 1 ? "0" + hex : hex;
+  }).join("");
+}
+
+
+//MODAL
+
+function openModal() {
   const modal = document.getElementById("modal");
-  function openModal(){ modal.style.display='block'; setTimeout(()=> modal.classList.add('show'),10);}
-  function closeModal(){ modal.classList.remove('show'); setTimeout(()=> modal.style.display='none',300);}
-  window.onclick=function(event){ if(event.target==modal) closeModal(); }
-  
-  function saveModalUser(){
-    const name=document.getElementById('modal-username').value.trim();
-    const color=document.getElementById('modal-usercolor').value;
-    if(!name) return alert("Ingresa un nombre");
-    createUserElement(name,color);
-    closeModal();
-  }
+  const nameInput = document.getElementById("modal-username");
+  const colorInput = document.getElementById("modal-usercolor");
+
+  // 🔹 Limpia los campos antes de abrir
+  nameInput.value = "";
+  colorInput.value = "#0074D9"; // color por defecto (puedes cambiarlo)
+
+  modal.style.display = "block";
+  setTimeout(() => modal.classList.add("show"), 10);
+}
+
+
+function closeModal() {
+  const modal = document.getElementById("modal");
+  modal.classList.remove('show');
+  setTimeout(() => modal.style.display = 'none', 300);
+}
+
+function saveModalUser() {
+  const name = document.getElementById('modal-username').value.trim();
+  const color = document.getElementById('modal-usercolor').value;
+  if (!name) return alert("Ingresa un nombre");
+  createUserElement(name, color);
+  closeModal(); // ✅ funciona siempre
+}
+
   
   // ====== Selección ======
   function selectUser(el) {
@@ -454,77 +667,146 @@ delBtn.onclick = (e) => {
   }
   
   // ====== Contadores ======
-  function updateCounters(){
-    const counts={};
-    document.querySelectorAll('.asignado .nombre').forEach(n=>{ counts[n.innerText]=(counts[n.innerText]||0)+1; });
-    document.querySelectorAll('.user-container').forEach(c=>{ const name=c.querySelector('.user').innerText; c.querySelector('.counter').innerText=counts[name]||0; });
-  }
-  
-  // ====== Otras funciones ======
-  function clearAll(){ 
-    if(confirm("¿Seguro que quieres limpiar todo el calendario?")){
-      document.querySelectorAll('.usuarios-lista').forEach(c=>c.innerHTML=""); 
-      saveAssignmentsToStorage(); 
-    } 
-  }
-  
-  function saveAsImage() {
-    const schedule = document.getElementById("schedule-container");
-    if (!schedule) { alert("No se encontró el contenedor del calendario."); return; }
-  
-    html2canvas(schedule, {
-      backgroundColor: '#ffffff',
-      scale: 2,
-      useCORS: true
-    })
-    .then(canvas => {
-      canvas.toBlob(blob => {
-        const link = document.createElement("a");
-        link.download = "rol_de_turnos.png";
-        link.href = URL.createObjectURL(blob);
-        link.click();
-        URL.revokeObjectURL(link.href);
-      }, "image/png");
-    })
-    .catch(err => {
-      console.error("Error al generar la imagen:", err);
-      alert("Ocurrió un error al generar la imagen.");
+function updateCounters(){
+    const counts = {};
+    document.querySelectorAll('.asignado .nombre').forEach(n => {
+        counts[n.innerText] = (counts[n.innerText] || 0) + 1;
     });
-  }
+
+    document.querySelectorAll('.user-container').forEach(c => {
+        const userDiv = c.querySelector('.user');
+        const counterDiv = c.querySelector('.counter');
+        if (!userDiv || !counterDiv) return; // ⚠ evita error
+        const name = userDiv.innerText;
+        counterDiv.innerText = counts[name] || 0;
+    });
+}
+
+
   
-function exportUserSummary() {
-  if (!confirm("¿Deseas guardar un resumen de usuarios y días asignados?")) return;
+// Funciones para abrir/cerrar modal de confirmación
+function showConfirm(message, onConfirm) {
+  const modal = document.getElementById("confirm-modal");
+  document.getElementById("confirm-message").innerText = message;
 
-  const assignedSpans = document.querySelectorAll(".asignado");
-  if (assignedSpans.length === 0) { 
-    alert("No hay usuarios asignados en el calendario."); 
-    return; 
+  modal.style.display = "block";
+
+  // Cancelar
+  const btnCancel = document.getElementById("confirm-cancel");
+  btnCancel.onclick = () => { modal.style.display = "none"; };
+
+  // Aceptar
+  const btnOk = document.getElementById("confirm-ok");
+  btnOk.onclick = () => {
+    modal.style.display = "none";
+    onConfirm(); // Ejecuta la acción confirmada
+  };
+}
+
+// ====== Limpiar calendario ======
+function clearAll() {
+  showConfirm("¿Seguro que quieres limpiar todo el calendario?", () => {
+    document.querySelectorAll('.usuarios-lista').forEach(c => c.innerHTML = ""); 
+    saveAssignmentsToStorage(); 
+  });
+}
+  
+// Guardar imagen con verificación de usuarios
+function saveAsImage() {
+  const schedule = document.getElementById("schedule-container");
+  if (!schedule) {
+    alert("No se encontró el contenedor del calendario.");
+    return;
   }
 
-  // Contar cuántos bloques tiene cada usuario
-  const counts = {};
-  assignedSpans.forEach(span => {
-    const user = span.querySelector('.nombre').innerText.trim();
-    if (!counts[user]) counts[user] = 0;
-    counts[user]++;
+  const anyUserAssigned = schedule.querySelectorAll(".asignado").length > 0;
+  if (!anyUserAssigned) {
+    showAlert("No hay usuarios asignados. Por favor asigna usuarios antes de capturar la imagen.");
+    return;
+  }
+
+  html2canvas(schedule, {
+    backgroundColor: '#ffffff',
+    scale: 2,
+    useCORS: true
+  })
+  .then(canvas => {
+    canvas.toBlob(blob => {
+      const link = document.createElement("a");
+      const fecha = new Date().toISOString().slice(0,10);
+      link.download = `rol_de_turnos_${fecha}.png`;
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }, "image/png");
+  })
+  .catch(err => {
+    console.error("Error al generar la imagen:", err);
+    alert("Ocurrió un error al generar la imagen.");
+  });
+}
+//Guardar Excel
+function exportUserSummary() {
+  const tbodyRows = document.querySelectorAll("#schedule-body tr");
+  const diasCabecera = Array.from(document.querySelectorAll("#schedule-container thead th"))
+                            .slice(2) // Saltamos Turno y Week
+                            .map(th => th.innerText);
+
+  if (tbodyRows.length === 0) return alert("No hay datos en el calendario.");
+
+  // Verificar si hay al menos un usuario asignado
+  const anyUserAssigned = Array.from(tbodyRows).some(tr => 
+    Array.from(tr.querySelectorAll(".bloque")).some(td => td.querySelector(".asignado"))
+  );
+if(!anyUserAssigned) return showAlert("No hay usuarios asignados en el calendario. Por favor asigna usuarios.");
+
+  let csvContent = "";
+
+  // Cabecera: Week en primer cuadrito
+  const weekText = document.querySelector("#schedule-container thead th:nth-child(2)").innerText;
+  csvContent += `"${weekText}","","${diasCabecera.join('","')}"\n`;
+
+  const userCounts = {};
+
+  tbodyRows.forEach((tr, trIndex) => {
+    const turno = tr.querySelector(".turno") ? tr.querySelector(".turno").innerText.replace(/\n/g,' ') : "";
+    const area = tr.querySelector(".area") ? tr.querySelector(".area").innerText : "";
+
+    const diasData = Array.from(tr.querySelectorAll(".bloque")).map(td => {
+      // Tomamos el color de la celda para toda la columna
+      const color = td.style.background || "#FFFFFF";
+      const usuarios = Array.from(td.querySelectorAll(".asignado")).map(u => {
+        const nombre = u.querySelector(".nombre")?.innerText || "";
+        const subtitulo = u.querySelector(".subtitulo")?.innerText || "";
+        if(nombre) userCounts[nombre] = (userCounts[nombre] || 0) + 1;
+        return `${nombre}${subtitulo ? ` (${subtitulo})` : ""}`;
+      }).join(", ");
+      return `"${usuarios}"`; // usuarios dentro de la celda
+    });
+
+    csvContent += `"${turno}","${area}",${diasData.join(",")}\n`;
   });
 
-  // Convertir a CSV
-  let csvContent = "data:text/csv;charset=utf-8,Usuario,Dias Asignados\n";
-  for (const [user, count] of Object.entries(counts)) {
+  // Línea vacía
+  csvContent += `\n`;
+
+  // Resumen lateral
+  csvContent += "Usuario,Días Asignados\n";
+  for(const [user, count] of Object.entries(userCounts)){
     csvContent += `"${user}",${count}\n`;
   }
 
   // Descargar CSV
-  const encodedUri = encodeURI(csvContent);
+  const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
   const link = document.createElement("a");
-  const fecha = new Date().toISOString().slice(0,10); // fecha de exportación
+  const fecha = new Date().toISOString().slice(0,10);
   link.setAttribute("href", encodedUri);
-  link.setAttribute("download", `resumen_turnos.csv`);
+  link.setAttribute("download", `Rol_Turno_${fecha}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 }
+
 
 
 
@@ -583,6 +865,7 @@ const thWeek = document.createElement("th");
 thWeek.innerText = `Week ${weekNum}`;
 trHead.appendChild(thWeek);
 
+
 // === Días fines de semana (semana actual) ===
 const dias = ["Viernes", "Sábado", "Domingo"];
 const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
@@ -599,6 +882,7 @@ dias.forEach((dia, i) => {
   th.innerText = `${dia} ${fecha.getDate()} ${meses[fecha.getMonth()]}`;
   trHead.appendChild(th);
 });
+
 
 
 thead.appendChild(trHead);
@@ -674,10 +958,34 @@ if(!buttonsContainer){
   buttonsContainer.style.gap = "10px"; // separación vertical entre botones
 
   // Botón Capturar
-  const btnCapturar = document.createElement("button");
-  btnCapturar.innerText = "Capturar Imagen";
-  btnCapturar.onclick = () => captureWeekendTable();
-  buttonsContainer.appendChild(btnCapturar);
+  // Botón Capturar
+const btnCapturar = document.createElement("button");
+btnCapturar.innerText = "Capturar Imagen";
+btnCapturar.onclick = () => openConfirmCaptureModal();
+buttonsContainer.appendChild(btnCapturar);
+
+// ===== Modal Confirmación Captura =====
+function openConfirmCaptureModal() {
+  const modal = document.getElementById("confirm-capture-modal");
+  modal.style.display = "block";
+  setTimeout(() => modal.classList.add("show"), 10);
+
+  const cancelBtn = document.getElementById("cancel-capture-btn");
+  const acceptBtn = document.getElementById("accept-capture-btn");
+
+  cancelBtn.onclick = () => closeConfirmCaptureModal();
+  acceptBtn.onclick = () => {
+    closeConfirmCaptureModal();
+    captureWeekendTable(); // ✅ guardar imagen
+  };
+}
+
+function closeConfirmCaptureModal() {
+  const modal = document.getElementById("confirm-capture-modal");
+  modal.classList.remove("show");
+  setTimeout(() => modal.style.display = "none", 300);
+}
+
 
   // Botón Deseleccionar Usuario
   const btnDeseleccionar = document.createElement("button");
@@ -699,11 +1007,27 @@ if(!buttonsContainer){
 
 
 
-  // Mostrar modal
-  const modal = document.getElementById("weekend-modal");
-  modal.style.display = "block";
-  setTimeout(()=> modal.classList.add("show"), 10);
+// Mostrar modal de fines de semana
+const modal = document.getElementById("weekend-modal");
+
+// 🧼 Limpia el contenido anterior antes de mostrarlo
+limpiarModalFinesDeSemana();
+
+modal.style.display = "block";
+setTimeout(() => modal.classList.add("show"), 10);
+
 }
+function limpiarModalFinesDeSemana() {
+  const modal = document.getElementById("weekend-modal");
+  if (!modal) return;
+  modal.querySelectorAll(".asignado").forEach(celda => {
+    celda.classList.remove("asignado");
+    const nombre = celda.querySelector(".nombre");
+    if (nombre) nombre.remove();
+    celda.style.background = "";
+  });
+}
+
 
 function closeWeekendModal() {
   const modal = document.getElementById("weekend-modal");
@@ -712,25 +1036,30 @@ function closeWeekendModal() {
 }
 
 // Captura solo de la tabla y cierra modal después de confirmar
-function captureWeekendTable(){
+function captureWeekendTable() {
   const schedule = document.querySelector("#weekend-container table");
-  if(!schedule) return alert("No se encontró la tabla.");
+  if (!schedule) return alert("No se encontró la tabla.");
 
-  html2canvas(schedule, {backgroundColor:'#fff', scale:2, useCORS:true})
-    .then(canvas=>{
-      canvas.toBlob(blob=>{
+  html2canvas(schedule, { backgroundColor: '#fff', scale: 2, useCORS: true })
+    .then(canvas => {
+      canvas.toBlob(blob => {
         const link = document.createElement("a");
         link.download = "weekend_turnos.png";
         link.href = URL.createObjectURL(blob);
         link.click();
         URL.revokeObjectURL(link.href);
       }, "image/png");
-    }).catch(err=>{ console.error(err); alert("Error al capturar la tabla"); });
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Error al capturar la tabla");
+    });
 
-  if(confirm("¿Estás seguro de capturar la tabla de fines de semana?")){
-    closeWeekendModal();
-  }
+  // ❌ ya NO pongas confirmaciones aquí
+  // closeWeekendModal() solo si quieres cerrar automáticamente después de guardar
+  closeWeekendModal();
 }
+
 let selectedWeekendUser = null;
 let selectedWeekendColor = null;
 
@@ -799,6 +1128,57 @@ function assignWeekendUser(container){
 
 
 
+function ajustarTamanoUsuarios() {
+  const contenedor = document.getElementById("users");
+  if (!contenedor) return; // 🔹 evita el error si aún no existe
+
+  const usuarios = contenedor.querySelectorAll(".usuario");
+  if (usuarios.length === 0) return;
+
+  let tamano = 1;
+  if (usuarios.length > 6 && usuarios.length <= 10) tamano = 0.9;
+  else if (usuarios.length > 10 && usuarios.length <= 15) tamano = 0.8;
+  else if (usuarios.length > 15 && usuarios.length <= 20) tamano = 0.7;
+  else if (usuarios.length > 20) tamano = 0.6;
+
+  usuarios.forEach(u => {
+    u.style.transform = `scale(${tamano})`;
+    u.style.transformOrigin = "top left";
+    u.style.margin = "3px";
+  });
+}
+
+
+// Llamar cada vez que se crea o elimina un usuario
+const originalCreateUserElement = createUserElement;
+createUserElement = function(name, color) {
+  const userDiv = originalCreateUserElement(name, color);
+  ajustarTamanoUsuarios();
+  return userDiv;
+};
+
+const originalDeleteUser = deleteUser;
+deleteUser = function(name) {
+  originalDeleteUser(name);
+  ajustarTamanoUsuarios();
+};
+function deleteUser(name) {
+  const userElement = document.querySelector(`.usuario[data-name="${name}"]`);
+  if (userElement) userElement.remove();
+
+  // 🔹 Elimina también del localStorage si lo estás usando
+  const users = JSON.parse(localStorage.getItem("usuarios") || "[]");
+  const updated = users.filter(u => u.name !== name);
+  localStorage.setItem("usuarios", JSON.stringify(updated));
+
+  // 🔹 Reajusta tamaños
+  ajustarTamanoUsuarios();
+
+  console.log(`Usuario ${name} eliminado`);
+}
+
+// Ejecutar una vez al cargar
+window.addEventListener("load", ajustarTamanoUsuarios);
 
 
 
@@ -811,11 +1191,23 @@ function assignWeekendUser(container){
     loadUsersFromStorage();
     loadAssignmentsFromStorage();
   };
-  </script>
-  <footer id="footer">
+  
+  function showAlert(message) {
+  const modal = document.getElementById("alert-modal");
+  document.getElementById("alert-message").innerText = message;
+  modal.style.display = 'block';
+  setTimeout(()=> modal.classList.add('show'), 10);
+}
+
+function closeAlertModal() {
+  const modal = document.getElementById("alert-modal");
+  modal.classList.remove('show');
+  setTimeout(()=> modal.style.display = 'none', 300);
+}
+
+</script>
+<footer id="footer">
   📅 Rol de Turnos Semanal -  Derechos reservados @AMPUERO
 </footer>
 </body>
 </html>
-
-
