@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -199,8 +197,374 @@ z-index: 100;
 }
 
 .modal1 { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; }
-  .modal1-content { background:#fff; margin:15% auto; padding:20px; border-radius:10px; width:300px; text-align:center; }
-</style>
+.modal1-content { background:#fff; margin:15% auto; padding:20px; border-radius:10px; width:300px; text-align:center; }
+
+
+/* Modal de eliminacion */
+
+.toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  background: #0074D9;   /* azul estilo tabla */
+  color: white;
+  padding: 15px 25px;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  z-index: 999999;
+  opacity: 0;
+  transition: opacity .3s ease, transform .3s ease;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.toast.hidden {
+  display: none;
+}
+/* stylo de eliminacion*/
+
+/* Fondo oscuro */
+.modal-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999998;
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+
+/* Ventana del modal */
+.modal7 {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  width: 350px;
+  text-align: center;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+  transform: scale(0.85);
+  transition: transform .3s ease;
+}
+
+.modal-buttons1 {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.btn {
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  width: 100%;
+  border: none;
+}
+
+/* Botón azul */
+.btn.yes {
+  background: #0074D9;
+  color: white;
+}
+
+/* Botón cancelar */
+.btn.no {
+  background: #dddddd;
+}
+
+/* Clases de visibilidad */
+.modal-bg.show {
+  opacity: 1;
+}
+
+.modal-bg.hidden {
+  display: none;
+}
+
+/* Animación */
+.modal-bg.show .modal {
+  transform: scale(1);
+}
+
+
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: .3s;
+  pointer-events: none;
+}
+
+.modal.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  width: 350px;
+  border-radius: 10px;
+  text-align: center;
+  animation: pop .3s ease;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.8); opacity: 0 }
+  100% { transform: scale(1); opacity: 1 }
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.modal-buttons button {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#excelCancel {
+  background: #ccc;
+}
+
+#excelConfirm {
+  background: #007bff;
+  color: white;
+}
+
+/* ===== Modal Excel exclusivo ===== */
+
+.modal-excel {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s;
+  z-index: 99999;
+}
+
+.modal-excel.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-excel-content {
+  background: white;
+  width: 380px;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.4);
+  animation: zoomIn .25s ease;
+}
+
+.modal-excel-content textarea {
+  width: 100%;
+  height: 60px;
+  resize: none;
+  margin-bottom: 10px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #aaa;
+}
+
+.modal-excel-buttons {
+  display: flex;
+  justify-content: end;
+  gap: 10px;
+}
+
+.modal-excel-buttons button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+#excelCancel { background: #888; color: white; }
+#excelSave { background: #007bff; color: white; }
+
+/* Animación */
+@keyframes zoomIn {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.hidden { display: none; }
+
+/*Modal eliminacion*/
+/* Fondo */
+.del-bg {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
+}
+
+.del-bg.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.del-bg.hidden {
+  display: none;
+}
+
+/* Caja */
+.del-box {
+  background: #fff;
+  width: 330px;
+  padding: 25px;
+  border-radius: 12px;
+  text-align: center;
+  animation: popDel .25s ease;
+}
+
+@keyframes popDel {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Botones */
+.del-buttons {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.del-btn {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.del-btn.cancel {
+  background: #bbb;
+}
+
+.del-btn.delete {
+  background: #d9534f;
+  color: white;
+}
+
+
+/* ESTYLO PARA FINES DE SEMANA*/
+
+/* Fondo oscuro del modal */
+.confirm-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: .25s ease;
+    z-index: 9999;
+}
+
+.confirm-bg.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Caja del modal */
+.confirm-box {
+    background: #ffffff;
+    width: 320px;
+    padding: 25px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+    animation: confirmPop .28s ease;
+}
+
+/* Icono grande */
+.confirm-icon {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+/* Animación */
+@keyframes confirmPop {
+    0% { transform: scale(0.75); opacity: 0 }
+    100% { transform: scale(1); opacity: 1 }
+}
+
+/* Botones */
+.confirm-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 22px;
+}
+
+.btn-confirm-yes {
+    background: #d63031;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.btn-confirm-yes:hover {
+    background: #b02425;
+}
+
+.btn-confirm-no {
+    background: #636e72;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.btn-confirm-no:hover {
+    background: #535b5d;
+}
+
 </style>
 </head>
 <body>
@@ -227,7 +591,7 @@ z-index: 100;
     <button onclick="clearSelection()">Deseleccionar</button>
     <button onclick="clearAll()">🧹 Limpiar todo</button>
     <button onclick="saveAsImage()">💾 Guardar como imagen</button>
-    <button onclick="exportUserSummary()">📈 Exportar resumen a Excel</button>
+    <button onclick="handleExcelSave()">Guardar Excel</button>
     <br>
     <br>
      <br>
@@ -318,6 +682,8 @@ z-index: 100;
   </div>
 </div>
 
+<!-- Modal DE ELIMINADO -->
+<div id="toast" class="toast hidden">Usuario eliminado</div>
 
 <!-- Modal Confirmación Captura -->
 <div id="confirm-capture-modal" class="modal">
@@ -353,6 +719,64 @@ z-index: 100;
   </div>
 </div>
 
+
+<!-- Modal de eliminación -->
+<div id="deleteModal" class="del-bg hidden">
+  <div class="del-box">
+    <h2>Eliminar usuario</h2>
+    <p id="delMsg">¿Seguro que deseas eliminar?</p>
+
+    <div class="del-buttons">
+      <button id="delCancel" class="del-btn cancel">Cancelar</button>
+      <button id="delConfirm" class="del-btn delete">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ================= MODAL NUEVO PARA GUARDAR EXCEL ================= -->
+<div id="excelInfoModal" class="modal-excel hidden">
+  <div class="modal-excel-content">
+    <h2>Información adicional para guardar Excel</h2>
+
+    <label>Vacaciones:</label>
+    <textarea id="excelVacaciones" placeholder="Nombres y Fechas..."></textarea>
+
+    <label>Incapacidades:</label>
+    <textarea id="excelIncapacidades" placeholder="Nombres y Fechas..."></textarea>
+
+    <label>Permisos:</label>
+    <textarea id="excelPermisos" placeholder="Nombres y Detalles..."></textarea>
+
+    <div class="modal-excel-buttons">
+      <button id="excelCancel">Cancelar</button>
+      <button id="excelSave">Guardar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ================= MODAL DE CONFIRMACIÓN PERSONALIZADO PARA FINES DE SEMANA ================= -->
+<div id="confirmModal" class="confirm-bg hidden">
+  <div class="confirm-box">
+      
+      <div class="confirm-icon">
+          ⚠️
+      </div>
+
+      <h2 id="confirmTitle">Confirmar acción</h2>
+      <p id="confirmMessage">¿Estás seguro?</p>
+
+      <div class="confirm-buttons">
+          <button id="confirmYes" class="btn-confirm-yes">Sí, eliminar</button>
+          <button id="confirmNo" class="btn-confirm-no">Cancelar</button>
+      </div>
+
+  </div>
+</div>
+
+
 <script>
   const turns = [
     { name: "1er Turno", time: "6:00 - 14:00" },
@@ -364,6 +788,9 @@ z-index: 100;
   const usersList = document.getElementById("users-list");
   let selectedUser = null;
   let selectedColor = null;
+
+//
+  let selectedUserDiv = null; // para guardar el elemento DOM del usuario actualmente seleccionado
 
 
   // ====== Cabecera de días con fechas ======
@@ -456,92 +883,154 @@ const weekNum = Math.ceil((((today - firstJan) / 86400000) + firstJan.getDay() +
   }
   
   function loadAssignmentsFromStorage(){
-    const assignments = JSON.parse(localStorage.getItem('asignaciones')||'[]');
-    const bloques = document.querySelectorAll('.bloque');
+  const assignments = JSON.parse(localStorage.getItem('asignaciones') || '[]');
+  const bloques = document.querySelectorAll('.bloque');
 
-    assignments.forEach((usuarios,i)=>{
-      if(!bloques[i]) return; // ⚠ ignora bloques que no existen
+  assignments.forEach((usuarios, i) => {
+    if (!bloques[i]) return;
 
-      const container = bloques[i].querySelector('.usuarios-lista');
-      if(!container) return; // ⚠ ignora si no encuentra el contenedor
+    const container = bloques[i].querySelector('.usuarios-lista');
+    if (!container) return;
 
-      usuarios.forEach(u=>{
-        const span = document.createElement("span");
-        span.className="asignado";
-        span.style.background=u.color;
+    usuarios.forEach(u => {
+      const span = document.createElement("span");
+      span.className = "asignado";
+      span.style.background = u.color;
 
-        const nombreDiv = document.createElement("div");
-        nombreDiv.className="nombre";
-        nombreDiv.innerText=u.name;
-        span.appendChild(nombreDiv);
+      // Guardar el nombre y subtítulo en el propio span (¡CLAVE!)
+      span.dataset.username = u.name;
+      span.dataset.subtitulo = u.subtitulo || "";
 
-        if(u.subtitulo){
-          const subDiv = document.createElement("div");
-          subDiv.className="subtitulo";
-          subDiv.innerText=u.subtitulo;
-          span.appendChild(subDiv);
-        }
+      const nombreDiv = document.createElement("div");
+      nombreDiv.className = "nombre";
+      nombreDiv.innerText = u.name;
+      span.appendChild(nombreDiv);
 
-        span.onclick=function(e){ 
-          e.stopPropagation(); 
-          if(confirm(`Eliminar a ${u.name}?`)){ 
-            span.remove(); 
-            saveAssignmentsToStorage(); 
-          } 
-        };
+      if (u.subtitulo) {
+        const subDiv = document.createElement("div");
+        subDiv.className = "subtitulo";
+        subDiv.innerText = u.subtitulo;
+        span.appendChild(subDiv);
+      }
 
-        container.appendChild(span);
-      });
+      // ONCLICK SEGURO (no usa u.name jamás)
+      span.onclick = function (e) {
+    e.stopPropagation();  // <--- OBLIGATORIO
+
+    const nombreReal = span.dataset.username;
+
+    showDeleteModal(`¿Eliminar a ${nombreReal}?`, () => {
+      span.remove();
+      saveAssignmentsToStorage();
+      if (typeof clearSelectedUser === "function") clearSelectedUser();
+      showToast("Usuario eliminado");
     });
+};
 
-    updateCounters();
+
+      container.appendChild(span);
+    });
+  });
+
+  updateCounters();
+}
+
+function showDeleteModal(message, onConfirm) {
+  const modal = document.getElementById("deleteModal");
+  const msg = document.getElementById("delMsg");
+  const btnYes = document.getElementById("delConfirm");
+  const btnNo = document.getElementById("delCancel");
+
+  msg.innerText = message;
+
+  modal.classList.remove("hidden");
+
+  setTimeout(() => {
+    modal.classList.add("show");
+  }, 10);
+
+  // Limpiar listeners previos
+  btnYes.onclick = null;
+  btnNo.onclick = null;
+
+  btnYes.onclick = () => {
+    modal.classList.remove("show");
+    setTimeout(() => modal.classList.add("hidden"), 250);
+    onConfirm();
+  };
+
+  btnNo.onclick = () => {
+    modal.classList.remove("show");
+    setTimeout(() => modal.classList.add("hidden"), 250);
+  };
 }
 
   
   // ====== Usuarios ======
-  function createUserElement(name,color){
-    if(Array.from(document.querySelectorAll('.user')).some(u => u.innerText === name)) return;
+function createUserElement(name, color) {
+// Evitar usuarios duplicados
+const usuariosActuales = Array.from(document.querySelectorAll('.user-container .user'))
+                              .map(u => u.dataset.username?.toLowerCase() || u.innerText.toLowerCase());
+
+if (usuariosActuales.includes(name.toLowerCase())) {
+    showAlert(`El usuario "${name}" ya existe.`);
+    return;
+}
 
     const container = document.createElement("div");
-    container.className="user-container";
+    container.className = "user-container";
+
     const userDiv = document.createElement("div");
-    userDiv.className="user";
-    userDiv.style.background=color;
-    userDiv.innerText=name;
-    userDiv.onclick = ()=>selectUser(userDiv);
+    userDiv.className = "user";
+    userDiv.style.background = color;
+    userDiv.innerText = name;
+
+    // Selección normal
+    userDiv.onclick = () => selectUser(userDiv);
+
     enableUserColorChange(userDiv, name);
 
-  
     const counter = document.createElement("div");
-    counter.className="counter";
-    counter.innerText="0";
-  
-    const delBtn = document.createElement("button");
-    delBtn.className="delete-btn";
-    delBtn.innerText="×";
-    // Eliminar usuario en la lista principal
-delBtn.onclick = (e) => {
-  e.stopPropagation();
-  if(confirm(`Eliminar usuario ${name}?`)){
-    container.remove(); // quita de la UI
-    // Eliminar asignaciones de ese usuario en la tabla
-    document.querySelectorAll('.asignado .nombre').forEach(n => {
-      if(n.innerText === name) n.parentElement.remove();
-    });
-    saveAssignmentsToStorage(); // actualizar asignaciones
-    saveUsersToStorage();       // **guardar usuarios actualizados**
-    if(selectedUser === name) clearSelection();
-  }
-};
+    counter.className = "counter";
+    counter.innerText = "0";
 
-  
+    const delBtn = document.createElement("button");
+    delBtn.className = "delete-btn";
+    delBtn.innerText = "×";
+    delBtn.dataset.username = name;   // <- NOMBRE REAL AQUÍ
+
+    // ==== ELIMINACIÓN SEGURA CON MODAL ====
+    delBtn.onclick = (e) => {
+        e.stopPropagation(); // evita seleccionar usuario al borrar
+
+        const usuarioReal = delBtn.dataset.username; // <-- SIEMPRE EL CORRECTO
+
+        showConfirmDelete(`¿Eliminar a ${usuarioReal}?`, () => {
+
+            container.remove(); // quita de la UI
+
+            // eliminar asignaciones del usuario
+            document.querySelectorAll('.asignado .nombre').forEach(n => {
+                if (n.innerText === usuarioReal) {
+                    n.parentElement.remove();
+                }
+            });
+
+            saveAssignmentsToStorage();
+            saveUsersToStorage();
+            if (selectedUser === usuarioReal) clearSelection();
+        });
+    };
+
     container.appendChild(userDiv);
     container.appendChild(counter);
     container.appendChild(delBtn);
     usersList.appendChild(container);
+
     saveUsersToStorage();
     updateCounters();
-  }
+}
+
   
 // ====== Doble clic para cambiar color del usuario ======
 function enableUserColorChange(userDiv, name) {
@@ -621,18 +1110,52 @@ function saveModalUser() {
 }
 
   
-  // ====== Selección ======
+    // ====== Selección ======
   function selectUser(el) {
-    document.querySelectorAll('.user').forEach(u => u.style.outline = 'none');
-    el.style.outline = '3px solid #000';
-    selectedUser = el.innerText;
-    selectedColor = el.style.background;
-    
-    const cont = document.getElementById('subtitulo-container');
-    cont.classList.remove('hidden');
-    setTimeout(() => cont.classList.add('show'), 10);
+
+  // Si haces clic en el MISMO usuario → se deselecciona
+  if (selectedUserDiv === el) {
+    el.style.outline = 'none';
+    selectedUserDiv = null;
+    selectedUser = null;
+    selectedColor = null;
+    return;
   }
+
+  // Quitar selección previa
+  if (selectedUserDiv) {
+    selectedUserDiv.style.outline = 'none';
+  }
+
+  // Seleccionar nuevo
+  el.style.outline = '3px solid #000';
+  selectedUserDiv = el;
+  selectedUser = el.innerText.trim();
+  selectedColor = el.style.background;
+}
   
+// Limpia la selección actual (deselecciona el elemento y oculta el subtítulo)
+function clearSelectedUser() {
+  if (typeof selectedUserDiv !== 'undefined' && selectedUserDiv) {
+    selectedUserDiv.style.outline = 'none';
+    selectedUserDiv = null;
+    selectedUser = null;
+    selectedColor = null;
+
+    const cont = document.getElementById('subtitulo-container');
+    if (cont) {
+      cont.classList.remove('show');
+      setTimeout(()=> cont.classList.add('hidden'), 300);
+    }
+    return true;
+  }
+  selectedUser = null;
+  selectedColor = null;
+  return false;
+}
+
+
+
   function clearSelection() {
     selectedUser = null;
     document.querySelectorAll('.user').forEach(u => u.style.outline = 'none');
@@ -745,68 +1268,232 @@ function saveAsImage() {
     alert("Ocurrió un error al generar la imagen.");
   });
 }
-//Guardar Excel
-function exportUserSummary() {
-  const tbodyRows = document.querySelectorAll("#schedule-body tr");
-  const diasCabecera = Array.from(document.querySelectorAll("#schedule-container thead th"))
-                            .slice(2) // Saltamos Turno y Week
-                            .map(th => th.innerText);
 
-  if (tbodyRows.length === 0) return alert("No hay datos en el calendario.");
+
+
+
+
+
+
+// ======================================================
+//   MODAL: Información extra para el Excel
+// ======================================================
+
+function handleExcelSave() {
+  const tbodyRows = document.querySelectorAll("#schedule-body tr");
 
   // Verificar si hay al menos un usuario asignado
-  const anyUserAssigned = Array.from(tbodyRows).some(tr => 
+  const anyUserAssigned = Array.from(tbodyRows).some(tr =>
     Array.from(tr.querySelectorAll(".bloque")).some(td => td.querySelector(".asignado"))
   );
-if(!anyUserAssigned) return showAlert("No hay usuarios asignados en el calendario. Por favor asigna usuarios.");
+
+  if (!anyUserAssigned) {
+    showAlert("No hay usuarios asignados en el calendario. Por favor asigna usuarios.");
+    return;
+  }
+
+  // Si sí hay usuarios → abrir modal
+  openExcelInfoModal();
+}
+
+// ==== Abrir modal ====
+function openExcelInfoModal() {
+  const modal = document.getElementById("excelInfoModal");
+  modal.classList.remove("hidden");
+
+  setTimeout(() => modal.classList.add("show"), 10);
+}
+
+// ==== Cerrar modal ====
+function closeExcelInfoModal() {
+  const modal = document.getElementById("excelInfoModal");
+  modal.classList.remove("show");
+
+  setTimeout(() => {
+    modal.classList.add("hidden");
+    clearExcelInfoFields(); // <-- SE LIMPIA AUTOMÁTICAMENTE
+  }, 250);
+}
+
+
+// ==== Capturar datos ingresados ====
+function getExcelExtraInfo() {
+  return {
+    vacaciones: document.getElementById("excelVacaciones").value.trim(),
+    incapacidades: document.getElementById("excelIncapacidades").value.trim(),
+    permisos: document.getElementById("excelPermisos").value.trim()
+  };
+}
+
+// ==== Botones del modal ====
+document.getElementById("excelCancel").onclick = () => {
+  closeExcelInfoModal();
+};
+
+document.getElementById("excelSave").onclick = () => {
+  const info = getExcelExtraInfo();
+  closeExcelInfoModal();
+
+  // Llamamos la NUEVA función que sí recibe la información
+  exportUserSummaryWithInfo(info);
+};
+
+// ======================================================
+//   Wrapper para integrar la info extra al Excel
+// ======================================================
+
+function exportUserSummaryWithInfo(info) {
+  // Guardamos la información extra globalmente
+  window.extraExcelInfo = info;
+
+  // Llamamos la exportación original
+  exportUserSummary();
+}
+
+// ======================================================
+//   Exportar Excel (CSV) con información adicional
+// ======================================================
+
+function exportUserSummary() {
+  const tbodyRows = document.querySelectorAll("#schedule-body tr");
+
+  const diasCabecera = Array.from(
+    document.querySelectorAll("#schedule-container thead th")
+  )
+    .slice(2)
+    .map((th) => th.innerText);
+
+  if (tbodyRows.length === 0)
+    return alert("No hay datos en el calendario.");
+
+  // Verificar si hay al menos un usuario asignado
+  const anyUserAssigned = Array.from(tbodyRows).some((tr) =>
+    Array.from(tr.querySelectorAll(".bloque")).some((td) =>
+      td.querySelector(".asignado")
+    )
+  );
+
+  if (!anyUserAssigned)
+    return showAlert("No hay usuarios asignados en el calendario. Por favor asigna usuarios.");
 
   let csvContent = "";
 
-  // Cabecera: Week en primer cuadrito
-  const weekText = document.querySelector("#schedule-container thead th:nth-child(2)").innerText;
+  // === ENCABEZADO DE DÍAS ===
+  const weekText = document.querySelector(
+    "#schedule-container thead th:nth-child(2)"
+  ).innerText;
+
   csvContent += `"${weekText}","","${diasCabecera.join('","')}"\n`;
 
-  const userCounts = {};
+  const userCounts = {}; // para días asignados
 
-  tbodyRows.forEach((tr, trIndex) => {
-    const turno = tr.querySelector(".turno") ? tr.querySelector(".turno").innerText.replace(/\n/g,' ') : "";
-    const area = tr.querySelector(".area") ? tr.querySelector(".area").innerText : "";
+  // === RECORRIDO DE TODA LA TABLA PARA EXPORTAR DÍAS ===
+  tbodyRows.forEach((tr) => {
+    const turno = tr.querySelector(".turno")
+      ? tr.querySelector(".turno").innerText.replace(/\n/g, " ")
+      : "";
+    const area = tr.querySelector(".area")
+      ? tr.querySelector(".area").innerText
+      : "";
 
-    const diasData = Array.from(tr.querySelectorAll(".bloque")).map(td => {
-      // Tomamos el color de la celda para toda la columna
-      const color = td.style.background || "#FFFFFF";
-      const usuarios = Array.from(td.querySelectorAll(".asignado")).map(u => {
-        const nombre = u.querySelector(".nombre")?.innerText || "";
-        const subtitulo = u.querySelector(".subtitulo")?.innerText || "";
-        if(nombre) userCounts[nombre] = (userCounts[nombre] || 0) + 1;
-        return `${nombre}${subtitulo ? ` (${subtitulo})` : ""}`;
-      }).join(", ");
-      return `"${usuarios}"`; // usuarios dentro de la celda
+    const diasData = Array.from(tr.querySelectorAll(".bloque")).map((td) => {
+      const usuarios = Array.from(td.querySelectorAll(".asignado"))
+        .map((u) => {
+          const nombre = u.querySelector(".nombre")?.innerText || "";
+          const subtitulo = u.querySelector(".subtitulo")?.innerText || "";
+
+          if (nombre)
+            userCounts[nombre] = (userCounts[nombre] || 0) + 1;
+
+          return `${nombre}${subtitulo ? ` (${subtitulo})` : ""}`;
+        })
+        .join(", ");
+
+      return `"${usuarios}"`;
     });
 
     csvContent += `"${turno}","${area}",${diasData.join(",")}\n`;
   });
 
+  // ===============================
+  //   CALCULO DE HORAS POR USUARIO
+  // ===============================
+  const userHours = {}; // nombre → total horas
+
+  const ranges = [
+    { start: 0, end: 4, hours: 8 },     // Primer turno
+    { start: 5, end: 9, hours: 7.5 },   // Segundo turno
+    { start: 10, end: 15, hours: 8.5 }, // Tercer turno
+  ];
+
+  ranges.forEach((range) => {
+    for (let row = range.start; row <= range.end; row++) {
+      const tr = tbodyRows[row];
+      if (!tr) continue;
+
+      const bloques = tr.querySelectorAll(".bloque");
+
+      // Columnas 0–7
+      for (let col = 0; col <= 7; col++) {
+        const td = bloques[col];
+        if (!td) continue;
+
+        const usuarios = td.querySelectorAll(".asignado");
+
+        usuarios.forEach((u) => {
+          const nombre = u.querySelector(".nombre")?.innerText.trim();
+          if (!nombre) return;
+
+          if (!userHours[nombre]) userHours[nombre] = 0;
+
+          // Sumar horas correspondientes al turno
+          userHours[nombre] += range.hours;
+        });
+      }
+    }
+  });
+
   // Línea vacía
   csvContent += `\n`;
 
-  // Resumen lateral
-  csvContent += "Usuario,Días Asignados\n";
-  for(const [user, count] of Object.entries(userCounts)){
-    csvContent += `"${user}",${count}\n`;
+  // ===============================
+  //  RESUMEN — HORAS Y DÍAS
+  // ===============================
+  csvContent += "Usuario,Días Asignados,Horas Totales\n";
+
+  const allUsers = new Set([
+    ...Object.keys(userCounts),
+    ...Object.keys(userHours),
+  ]);
+
+  allUsers.forEach((user) => {
+    const dias = userCounts[user] || 0;
+    const horas = userHours[user] || 0;
+    csvContent += `"${user}",${dias},${horas}\n`;
+  });
+
+  // ===============================
+  //   INFORMACIÓN EXTRA MANUAL
+  // ===============================
+  if (window.extraExcelInfo) {
+    csvContent += `\n`;
+    csvContent += `VACACIONES:,"${window.extraExcelInfo.vacaciones}"\n`;
+    csvContent += `INCAPACIDADES:,"${window.extraExcelInfo.incapacidades}"\n`;
+    csvContent += `PERMISOS:,"${window.extraExcelInfo.permisos}"\n`;
   }
 
-  // Descargar CSV
+  // ===============================
+  //   GENERAR ARCHIVO CSV
+  // ===============================
   const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
   const link = document.createElement("a");
-  const fecha = new Date().toISOString().slice(0,10);
+  const fecha = new Date().toISOString().slice(0, 10);
   link.setAttribute("href", encodedUri);
   link.setAttribute("download", `Rol_Turno_${fecha}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 }
-
 
 
 
@@ -1092,40 +1779,59 @@ document.getElementById('weekend-deselect-btn').onclick = function(){
 
 
 
-// Asignar usuario a bloque
-function assignWeekendUser(container){
-  if(!selectedWeekendUser) return;
+// Asignar usuario a bloque (FIN DE SEMANA)
+function assignWeekendUser(container) {
+  if (!selectedWeekendUser) return;
 
-  const yaAsignado = Array.from(container.children).some(u => u.querySelector('.nombre')?.innerText===selectedWeekendUser);
-  if(yaAsignado) return;
+  const yaAsignado = Array.from(container.children)
+    .some(u => u.querySelector('.nombre')?.innerText === selectedWeekendUser);
+  if (yaAsignado) return;
 
   const span = document.createElement("span");
   span.className = "asignado";
   span.style.background = selectedWeekendColor;
 
+  // Guardamos los datos dentro del span para evitar errores
+  span.dataset.username = selectedWeekendUser;
+  span.dataset.subtitulo = document.getElementById('weekend-subtitulo-selector').value || "";
+  span.dataset.color = selectedWeekendColor;
+
   const nombreDiv = document.createElement("div");
   nombreDiv.className = "nombre";
-  nombreDiv.innerText = selectedWeekendUser;
+  nombreDiv.innerText = span.dataset.username;
   span.appendChild(nombreDiv);
 
-  const subtitulo = document.getElementById('weekend-subtitulo-selector').value;
-  if(subtitulo){
-    const subDiv = document.createElement("div");
+  if (span.dataset.subtitulo) {
+    const subDiv = document.createElement("div"); 
     subDiv.className = "subtitulo";
-    subDiv.innerText = subtitulo;
+    subDiv.innerText = span.dataset.subtitulo;
     span.appendChild(subDiv);
   }
 
-  span.onclick = function(e){
+  // ELIMINACIÓN SEGURA CON MODAL — SIN confirm()
+  span.onclick = function (e) {
     e.stopPropagation();
-    if(confirm(`Eliminar usuario`)){
+
+    const nombreReal = span.dataset.username;
+
+    showConfirmDelete(`¿Eliminar a ${nombreReal}?`, () => {
       span.remove();
-    }
+      saveAssignmentsToStorage();
+      if (typeof clearSelectedUser === "function") clearSelectedUser();
+      showToast("Usuario eliminado");
+    });
   };
 
   container.appendChild(span);
+
+  saveAssignmentsToStorage();
 }
 
+function clearExcelInfoFields() {
+    document.getElementById("excelVacaciones").value = "";
+    document.getElementById("excelIncapacidades").value = "";
+    document.getElementById("excelPermisos").value = "";
+}
 
 
 function ajustarTamanoUsuarios() {
@@ -1162,6 +1868,25 @@ deleteUser = function(name) {
   originalDeleteUser(name);
   ajustarTamanoUsuarios();
 };
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.innerText = message;
+  toast.classList.remove("hidden");
+
+  setTimeout(() => {
+    toast.classList.add("show");
+  }, 10);
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.classList.add("hidden"), 300);
+  }, 1500);
+}
+
+
+
+
 function deleteUser(name) {
   const userElement = document.querySelector(`.usuario[data-name="${name}"]`);
   if (userElement) userElement.remove();
@@ -1203,6 +1928,37 @@ function closeAlertModal() {
   const modal = document.getElementById("alert-modal");
   modal.classList.remove('show');
   setTimeout(()=> modal.style.display = 'none', 300);
+}
+
+
+function showConfirmDelete(message, onYes) {
+  const modal = document.getElementById("confirmModal");
+  const msg = document.getElementById("confirmMessage");
+  const yesBtn = document.getElementById("confirmYes");
+  const noBtn = document.getElementById("confirmNo");
+
+  msg.innerText = message;
+
+  modal.classList.remove("hidden");
+
+  setTimeout(() => {
+    modal.classList.add("show");
+  }, 10);
+
+  // Limpiar listeners anteriores
+  yesBtn.onclick = null;
+  noBtn.onclick = null;
+
+  yesBtn.onclick = () => {
+    modal.classList.remove("show");
+    setTimeout(() => modal.classList.add("hidden"), 300);
+    onYes(); // Ejecuta la acción
+  };
+
+  noBtn.onclick = () => {
+    modal.classList.remove("show");
+    setTimeout(() => modal.classList.add("hidden"), 300);
+  };
 }
 
 </script>
