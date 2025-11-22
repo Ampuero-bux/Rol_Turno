@@ -882,58 +882,63 @@ const weekNum = Math.ceil((((today - firstJan) / 86400000) + firstJan.getDay() +
     updateCounters();
   }
   
-  function loadAssignmentsFromStorage(){
-  const assignments = JSON.parse(localStorage.getItem('asignaciones') || '[]');
-  const bloques = document.querySelectorAll('.bloque');
+function loadAssignmentsFromStorage() {
+    const assignments = JSON.parse(localStorage.getItem('asignaciones') || '[]');
+    const bloques = document.querySelectorAll('.bloque');
 
-  assignments.forEach((usuarios, i) => {
-    if (!bloques[i]) return;
+    assignments.forEach((usuarios, i) => {
 
-    const container = bloques[i].querySelector('.usuarios-lista');
-    if (!container) return;
+        if (!bloques[i]) return;
 
-    usuarios.forEach(u => {
-      const span = document.createElement("span");
-      span.className = "asignado";
-      span.style.background = u.color;
+        const container = bloques[i].querySelector('.usuarios-lista');
+        if (!container) return;
 
-      // Guardar el nombre y subtítulo en el propio span (¡CLAVE!)
-      span.dataset.username = u.name;
-      span.dataset.subtitulo = u.subtitulo || "";
+        usuarios.forEach(u => {
 
-      const nombreDiv = document.createElement("div");
-      nombreDiv.className = "nombre";
-      nombreDiv.innerText = u.name;
-      span.appendChild(nombreDiv);
+            const span = document.createElement("span");
+            span.className = "asignado";
+            span.style.background = u.color;
 
-      if (u.subtitulo) {
-        const subDiv = document.createElement("div");
-        subDiv.className = "subtitulo";
-        subDiv.innerText = u.subtitulo;
-        span.appendChild(subDiv);
-      }
+            // GUARDA EL NOMBRE REAL SIEMPRE
+            span.dataset.username = u.name;
+            span.dataset.subtitulo = u.subtitulo || "";
 
-      // ONCLICK SEGURO (no usa u.name jamás)
-      span.onclick = function (e) {
-    e.stopPropagation();  // <--- OBLIGATORIO
+            const nombreDiv = document.createElement("div");
+            nombreDiv.className = "nombre";
+            nombreDiv.innerText = u.name; // nombre correcto
+            span.appendChild(nombreDiv);
 
-    const nombreReal = span.dataset.username;
+            if (u.subtitulo) {
+                const subDiv = document.createElement("div");
+                subDiv.className = "subtitulo";
+                subDiv.innerText = u.subtitulo;
+                span.appendChild(subDiv);
+            }
 
-    showDeleteModal(`¿Eliminar a ${nombreReal}?`, () => {
-      span.remove();
-      saveAssignmentsToStorage();
-      if (typeof clearSelectedUser === "function") clearSelectedUser();
-      showToast("Usuario eliminado");
+            // === ELIMINACIÓN SEGURA (SIEMPRE FUNCIONA) ===
+            span.onclick = function (e) {
+                e.stopPropagation();
+
+                const nombreReal = this.dataset.username; // <- SIEMPRE EXISTE
+
+                showConfirmDelete(`¿Eliminar a ${nombreReal}?`, () => {
+
+                    this.remove(); // <- elimina correctamente
+
+                    saveAssignmentsToStorage();
+                    updateCounters();
+                    showToast("Usuario eliminado");
+                });
+            };
+
+            container.appendChild(span);
+        });
     });
-};
 
-
-      container.appendChild(span);
-    });
-  });
-
-  updateCounters();
+    updateCounters();
 }
+
+
 
 function showDeleteModal(message, onConfirm) {
   const modal = document.getElementById("deleteModal");
@@ -966,16 +971,18 @@ function showDeleteModal(message, onConfirm) {
 }
 
   
-  // ====== Usuarios ======
+// ====== Usuarios ======
 function createUserElement(name, color) {
-// Evitar usuarios duplicados
-const usuariosActuales = Array.from(document.querySelectorAll('.user-container .user'))
-                              .map(u => u.dataset.username?.toLowerCase() || u.innerText.toLowerCase());
 
-if (usuariosActuales.includes(name.toLowerCase())) {
-    showAlert(`El usuario "${name}" ya existe.`);
-    return;
-}
+    // Evitar usuarios duplicados
+    const usuariosActuales = Array.from(
+        document.querySelectorAll('.user-container .user')
+    ).map(u => u.dataset.username?.toLowerCase() || u.innerText.toLowerCase());
+
+    if (usuariosActuales.includes(name.toLowerCase())) {
+        showAlert(`El usuario "${name}" ya existe.`);
+        return;
+    }
 
     const container = document.createElement("div");
     container.className = "user-container";
@@ -983,6 +990,7 @@ if (usuariosActuales.includes(name.toLowerCase())) {
     const userDiv = document.createElement("div");
     userDiv.className = "user";
     userDiv.style.background = color;
+    userDiv.dataset.username = name; // IMPORTANTE
     userDiv.innerText = name;
 
     // Selección normal
@@ -997,30 +1005,38 @@ if (usuariosActuales.includes(name.toLowerCase())) {
     const delBtn = document.createElement("button");
     delBtn.className = "delete-btn";
     delBtn.innerText = "×";
-    delBtn.dataset.username = name;   // <- NOMBRE REAL AQUÍ
+    delBtn.dataset.username = name;
 
-    // ==== ELIMINACIÓN SEGURA CON MODAL ====
-    delBtn.onclick = (e) => {
-        e.stopPropagation(); // evita seleccionar usuario al borrar
+    // ==== ELIMINACIÓN SEGURA CON MODAL (SIN e.currentTarget) ====
+    delBtn.addEventListener('click', function () {
 
-        const usuarioReal = delBtn.dataset.username; // <-- SIEMPRE EL CORRECTO
+        const usuarioReal = this.dataset.username;     // siempre funciona
+        const containerElem = this.closest('.user-container'); // siempre existe
 
         showConfirmDelete(`¿Eliminar a ${usuarioReal}?`, () => {
 
-            container.remove(); // quita de la UI
+            // Eliminar de la lista de usuarios
+            if (containerElem) containerElem.remove();
 
-            // eliminar asignaciones del usuario
-            document.querySelectorAll('.asignado .nombre').forEach(n => {
-                if (n.innerText === usuarioReal) {
-                    n.parentElement.remove();
+            // Eliminar asignaciones del usuario
+            document.querySelectorAll('.asignado').forEach(asig => {
+                if (asig.dataset.username === usuarioReal) {
+                    asig.remove();
                 }
             });
 
             saveAssignmentsToStorage();
             saveUsersToStorage();
-            if (selectedUser === usuarioReal) clearSelection();
+
+            // borrar selección si era ese usuario
+            if (selectedUser === usuarioReal) {
+                clearSelection();
+            }
+
+            showToast("Usuario eliminado");
         });
-    };
+
+    });
 
     container.appendChild(userDiv);
     container.appendChild(counter);
@@ -1165,45 +1181,119 @@ function clearSelectedUser() {
     setTimeout(() => cont.classList.add('hidden'), 300);
   }
   
-  // ====== Asignación de usuarios ======
-  function assignUser(container){
-    if(!selectedUser) return;
-    const yaAsignado = Array.from(container.children).some(u=>u.querySelector('.nombre')?.innerText===selectedUser);
-    if(yaAsignado) return;
+function assignUser(container) {
+
+    if (!selectedUser) return;
+
+    const yaAsignado = Array.from(container.children)
+        .some(u => u.querySelector('.nombre')?.innerText === selectedUser);
+
+    if (yaAsignado) return;
+
     const span = document.createElement("span");
-    span.className="asignado";
-    span.style.background=selectedColor;
+    span.className = "asignado";
+    span.style.background = selectedColor;
+
+    // GUARDAR NOMBRE REAL (esto arregla todo)
+    span.dataset.username = selectedUser;
+
     const nombreDiv = document.createElement("div");
-    nombreDiv.className="nombre";
-    nombreDiv.innerText=selectedUser;
+    nombreDiv.className = "nombre";
+    nombreDiv.innerText = selectedUser;
     span.appendChild(nombreDiv);
-    const subtitulo=document.getElementById('subtitulo-selector').value;
-    if(subtitulo){
-      const subDiv=document.createElement("div");
-      subDiv.className="subtitulo";
-      subDiv.innerText=subtitulo;
-      span.appendChild(subDiv);
+
+    const subtitulo = document.getElementById('subtitulo-selector').value;
+    if (subtitulo) {
+        span.dataset.subtitulo = subtitulo;
+        const subDiv = document.createElement("div");
+        subDiv.className = "subtitulo";
+        subDiv.innerText = subtitulo;
+        span.appendChild(subDiv);
     }
-    span.onclick=function(e){ e.stopPropagation(); if(confirm(`Eliminar a ${selectedUser}?`)){ span.remove(); saveAssignmentsToStorage(); } };
-    container.appendChild(span);
-    saveAssignmentsToStorage();
-  }
-  
-  // ====== Contadores ======
-function updateCounters(){
-    const counts = {};
-    document.querySelectorAll('.asignado .nombre').forEach(n => {
-        counts[n.innerText] = (counts[n.innerText] || 0) + 1;
+
+    // === ELIMINACIÓN SEGURA CON MODAL ===
+    span.addEventListener("click", function (e) {
+        e.stopPropagation();
+
+        const nombreReal = this.dataset.username;
+
+        showConfirmDelete(`¿Eliminar a ${nombreReal}?`, () => {
+
+            this.remove();
+            saveAssignmentsToStorage();
+            updateCounters();
+            showToast("Usuario eliminado");
+
+        });
     });
 
+    // AÑADIR A LA TABLA
+    container.appendChild(span);
+
+    // GUARDAR
+    saveAssignmentsToStorage();
+
+    // REPARAR SPANS
+    repararTodosLosSpans();
+}
+function repararTodosLosSpans() {
+
+    document.querySelectorAll('.asignado').forEach(span => {
+
+        // --- REPARAR NOMBRE SI FALTA ---
+        if (!span.dataset.username) {
+            const nombreDiv = span.querySelector('.nombre');
+            if (nombreDiv) {
+                span.dataset.username = nombreDiv.innerText.trim();
+            }
+        }
+
+        // --- EVITAR AGREGAR EL LISTENER DOS VECES ---
+        if (span._listenerAsignado) return;
+        span._listenerAsignado = true;
+
+        // --- LISTENER DE ELIMINACIÓN ---
+        span.addEventListener("click", function (e) {
+
+            e.stopPropagation();
+
+            const nombreReal = this.dataset.username || "(desconocido)";
+
+            showConfirmDelete(`¿Eliminar a ${nombreReal}?`, () => {
+
+                this.remove();
+                saveAssignmentsToStorage();
+                updateCounters();
+                showToast("Usuario eliminado");
+
+            });
+        });
+
+    });
+}
+
+  
+  // ====== Contadores ======
+function updateCounters() {
+    const counts = {};
+
+    // Solo contar elementos asignados NORMALES (sin weekend)
+    document.querySelectorAll('.asignado:not(.weekend) .nombre').forEach(n => {
+        const user = n.innerText.trim();
+        counts[user] = (counts[user] || 0) + 1;
+    });
+
+    // Actualizar los contadores de cada usuario
     document.querySelectorAll('.user-container').forEach(c => {
         const userDiv = c.querySelector('.user');
         const counterDiv = c.querySelector('.counter');
-        if (!userDiv || !counterDiv) return; // ⚠ evita error
-        const name = userDiv.innerText;
+        if (!userDiv || !counterDiv) return;
+
+        const name = userDiv.dataset.username || userDiv.innerText.trim();
         counterDiv.innerText = counts[name] || 0;
     });
 }
+
 
 
   
@@ -1496,13 +1586,6 @@ function exportUserSummary() {
 }
 
 
-
-
-
-
-
-
-
 function openWeekendModal() {
   const container = document.getElementById("weekend-container");
   container.innerHTML = "";
@@ -1775,11 +1858,8 @@ document.getElementById('weekend-deselect-btn').onclick = function(){
 };
 
 
-
-
-
-
 // Asignar usuario a bloque (FIN DE SEMANA)
+
 function assignWeekendUser(container) {
   if (!selectedWeekendUser) return;
 
@@ -1789,9 +1869,9 @@ function assignWeekendUser(container) {
 
   const span = document.createElement("span");
   span.className = "asignado";
+  span.classList.add("weekend"); // ⬅️ ESTO HACE QUE NUNCA SE CUENTE
   span.style.background = selectedWeekendColor;
 
-  // Guardamos los datos dentro del span para evitar errores
   span.dataset.username = selectedWeekendUser;
   span.dataset.subtitulo = document.getElementById('weekend-subtitulo-selector').value || "";
   span.dataset.color = selectedWeekendColor;
@@ -1802,30 +1882,30 @@ function assignWeekendUser(container) {
   span.appendChild(nombreDiv);
 
   if (span.dataset.subtitulo) {
-    const subDiv = document.createElement("div"); 
+    const subDiv = document.createElement("div");
     subDiv.className = "subtitulo";
     subDiv.innerText = span.dataset.subtitulo;
     span.appendChild(subDiv);
   }
 
-  // ELIMINACIÓN SEGURA CON MODAL — SIN confirm()
-  span.onclick = function (e) {
+  // 🔥 ELIMINACIÓN CORRECTA SIN e.currentTarget
+  span.addEventListener('click', function (e) {
     e.stopPropagation();
 
-    const nombreReal = span.dataset.username;
+    const nombreReal = this.dataset.username;
 
     showConfirmDelete(`¿Eliminar a ${nombreReal}?`, () => {
-      span.remove();
+      this.remove();  // ✔ YA NO DA ERROR
       saveAssignmentsToStorage();
-      if (typeof clearSelectedUser === "function") clearSelectedUser();
       showToast("Usuario eliminado");
     });
-  };
+  });
 
   container.appendChild(span);
-
   saveAssignmentsToStorage();
 }
+
+
 
 function clearExcelInfoFields() {
     document.getElementById("excelVacaciones").value = "";
@@ -1863,11 +1943,6 @@ createUserElement = function(name, color) {
   return userDiv;
 };
 
-const originalDeleteUser = deleteUser;
-deleteUser = function(name) {
-  originalDeleteUser(name);
-  ajustarTamanoUsuarios();
-};
 
 function showToast(message) {
   const toast = document.getElementById("toast");
@@ -1884,38 +1959,46 @@ function showToast(message) {
   }, 1500);
 }
 
-
-
-
+// ==========================
+// ELIMINACIÓN GLOBAL SEGURA
+// ==========================
 function deleteUser(name) {
-  const userElement = document.querySelector(`.usuario[data-name="${name}"]`);
-  if (userElement) userElement.remove();
 
-  // 🔹 Elimina también del localStorage si lo estás usando
-  const users = JSON.parse(localStorage.getItem("usuarios") || "[]");
-  const updated = users.filter(u => u.name !== name);
-  localStorage.setItem("usuarios", JSON.stringify(updated));
+    // 🔹 Eliminar visual en lista lateral
+    const userElement = document.querySelector(`.user-container .user[data-username="${name}"]`);
+    if (userElement) userElement.parentElement.remove();
 
-  // 🔹 Reajusta tamaños
-  ajustarTamanoUsuarios();
+    // 🔹 Eliminar asignaciones en la tabla
+    document.querySelectorAll('.asignado').forEach(span => {
+        if (span.dataset.username === name) {
+            span.remove();
+        }
+    });
 
-  console.log(`Usuario ${name} eliminado`);
+    // 🔹 Eliminar de localStorage
+    const users = JSON.parse(localStorage.getItem("usuarios") || "[]");
+    const updated = users.filter(u => u.name !== name);
+    localStorage.setItem("usuarios", JSON.stringify(updated));
+
+    // 🔹 Actualizar UI general
+    if (selectedUser === name) clearSelection();
+    updateCounters();
+    saveAssignmentsToStorage();
+
+    showToast(`Usuario "${name}" eliminado`);
 }
+
 
 // Ejecutar una vez al cargar
 window.addEventListener("load", ajustarTamanoUsuarios);
-
-
-
-
-
-
   
   // ====== Inicialización ======
-  window.onload = () => {
+ window.onload = () => {
     loadUsersFromStorage();
     loadAssignmentsFromStorage();
-  };
+    repararTodosLosSpans();
+};
+
   
   function showAlert(message) {
   const modal = document.getElementById("alert-modal");
