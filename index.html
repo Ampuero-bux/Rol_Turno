@@ -575,7 +575,7 @@ z-index: 100;
     <h2>Usuarios</h2>
     <div id="users-list"></div>
 
-    <div id="subtitulo-container" class="subtitulo-box hidden">
+    <div id="subtitulo-container" class="subtitulo-box">
       <label for="subtitulo-selector" class="subtitulo-label">Modo de trabajo</label>
       <select id="subtitulo-selector" class="subtitulo-select">
         <option value="">— Ninguno —</option>
@@ -812,6 +812,46 @@ dias.forEach((dia, i) => {
   th.innerText = `${dia} ${diaNumero} ${mesNombre}`;
 });
 
+//AGREGAR USUARIOS MANUAL
+// ===== COLOR POR DEFECTO =====
+const COLOR_POR_DEFECTO = "#6195a7"; // azul claro
+const COLOR_POR_DEFECTO1 = "#ffcc99"; // azul claro
+const COLOR_POR_DEFECTO2 = "#ccccff"; // azul claro
+const COLOR_POR_DEFECTO3 = "#99ccff"; // azul claro
+const COLOR_POR_DEFECTO4 = " #a7a7b6 "; // azul claro
+const COLOR_POR_DEFECTO5 = " #0059b3 "; // azul claro
+
+// ===== BASE DE DATOS INICIAL =====
+const usuariosPredeterminados = [
+  { name: "OMAR", color: COLOR_POR_DEFECTO },
+  { name: "PATRICIA", color: COLOR_POR_DEFECTO },
+  { name: "JORGE", color: COLOR_POR_DEFECTO },
+  { name: "JESUS", color: COLOR_POR_DEFECTO },
+  { name: "FRANCISCO", color: COLOR_POR_DEFECTO },
+  { name: "LEONARDO", color: COLOR_POR_DEFECTO1 },
+  { name: "CLAUDIA", color: COLOR_POR_DEFECTO1 },
+  { name: "JONATHAN", color: COLOR_POR_DEFECTO1 },
+  { name: "VLADIMIR", color: COLOR_POR_DEFECTO1 },
+  { name: "ARTURO", color: COLOR_POR_DEFECTO1 },
+  { name: "CHRISTIAN", color: COLOR_POR_DEFECTO2 },
+  { name: "MELANY", color: COLOR_POR_DEFECTO2 },
+  { name: "CLAUDIO", color: COLOR_POR_DEFECTO2 },
+  { name: "VICENTE", color: COLOR_POR_DEFECTO3 },
+  { name: "DANIEL", color: COLOR_POR_DEFECTO3 },
+  { name: "EDGAR", color: COLOR_POR_DEFECTO3 },
+  { name: "DANIELA", color: COLOR_POR_DEFECTO3 },
+  { name: "DAVID", color: COLOR_POR_DEFECTO4 },
+  { name: "ANDRES", color: COLOR_POR_DEFECTO4 },
+  { name: "ADOLFO", color: COLOR_POR_DEFECTO4 },
+  { name: "CESAR", color: COLOR_POR_DEFECTO4 },
+  { name: "CARLOS", color: COLOR_POR_DEFECTO4 },
+  { name: "IGNACIO", color: COLOR_POR_DEFECTO4 },
+  { name: "ARACELI", color: COLOR_POR_DEFECTO4 },
+  { name: "DAVID MARQUEZ", color: COLOR_POR_DEFECTO4 },
+  { name: "OSCAR", color: COLOR_POR_DEFECTO5 },
+  { name: "FABIOLA", color: COLOR_POR_DEFECTO5 },
+  { name: "MISAEL", color: COLOR_POR_DEFECTO5 }
+];
 
   
   // ====== Mostrar Week X en la columna Week ======
@@ -863,10 +903,24 @@ const weekNum = Math.ceil((((today - firstJan) / 86400000) + firstJan.getDay() +
     localStorage.setItem('usuarios',JSON.stringify(usuarios));
   }
   
+  //function loadUsersFromStorage(){
+    //const data = JSON.parse(localStorage.getItem('usuarios')||'[]');
+    //data.forEach(u=>createUserElement(u.name,u.color));
+  //}
   function loadUsersFromStorage(){
-    const data = JSON.parse(localStorage.getItem('usuarios')||'[]');
-    data.forEach(u=>createUserElement(u.name,u.color));
+  const data = JSON.parse(localStorage.getItem('usuarios'));
+
+  if (!data || data.length === 0) {
+    // Si no hay nada guardado, cargar predeterminados
+    usuariosPredeterminados.forEach(u => {
+      createUserElement(u.name, u.color);
+    });
+    saveUsersToStorage();
+  } else {
+    data.forEach(u => createUserElement(u.name, u.color));
   }
+}
+
   
   function saveAssignmentsToStorage(){
     const assignments = [];
@@ -972,7 +1026,7 @@ function showDeleteModal(message, onConfirm) {
 
   
 // ====== Usuarios ======
-function createUserElement(name, color) {
+function createUserElement(name, color = COLOR_POR_DEFECTO) {
 
     // Evitar usuarios duplicados
     const usuariosActuales = Array.from(
@@ -989,7 +1043,7 @@ function createUserElement(name, color) {
 
     const userDiv = document.createElement("div");
     userDiv.className = "user";
-    userDiv.style.background = color;
+    userDiv.style.background = color || COLOR_POR_DEFECTO;
     userDiv.dataset.username = name; // IMPORTANTE
     userDiv.innerText = name;
 
@@ -1007,18 +1061,16 @@ function createUserElement(name, color) {
     delBtn.innerText = "×";
     delBtn.dataset.username = name;
 
-    // ==== ELIMINACIÓN SEGURA CON MODAL (SIN e.currentTarget) ====
+    // ==== ELIMINACIÓN SEGURA CON MODAL ====
     delBtn.addEventListener('click', function () {
 
-        const usuarioReal = this.dataset.username;     // siempre funciona
-        const containerElem = this.closest('.user-container'); // siempre existe
+        const usuarioReal = this.dataset.username;
+        const containerElem = this.closest('.user-container');
 
         showConfirmDelete(`¿Eliminar a ${usuarioReal}?`, () => {
 
-            // Eliminar de la lista de usuarios
             if (containerElem) containerElem.remove();
 
-            // Eliminar asignaciones del usuario
             document.querySelectorAll('.asignado').forEach(asig => {
                 if (asig.dataset.username === usuarioReal) {
                     asig.remove();
@@ -1028,7 +1080,6 @@ function createUserElement(name, color) {
             saveAssignmentsToStorage();
             saveUsersToStorage();
 
-            // borrar selección si era ese usuario
             if (selectedUser === usuarioReal) {
                 clearSelection();
             }
@@ -1046,6 +1097,7 @@ function createUserElement(name, color) {
     saveUsersToStorage();
     updateCounters();
 }
+
 
   
 // ====== Doble clic para cambiar color del usuario ======
@@ -1102,13 +1154,14 @@ function openModal() {
   const nameInput = document.getElementById("modal-username");
   const colorInput = document.getElementById("modal-usercolor");
 
-  // 🔹 Limpia los campos antes de abrir
   nameInput.value = "";
-  colorInput.value = "#0074D9"; // color por defecto (puedes cambiarlo)
+  colorInput.value = COLOR_POR_DEFECTO; // antes era "#0074D9"
 
   modal.style.display = "block";
   setTimeout(() => modal.classList.add("show"), 10);
 }
+
+
 
 
 function closeModal() {
@@ -1126,29 +1179,36 @@ function saveModalUser() {
 }
 
   
-    // ====== Selección ======
-  function selectUser(el) {
+// ====== Selección ======
+function selectUser(el) {
+  const box = document.getElementById("subtitulo-container");
 
-  // Si haces clic en el MISMO usuario → se deselecciona
+  // Si hago click en el mismo → deselecciono
   if (selectedUserDiv === el) {
-    el.style.outline = 'none';
+    el.style.outline = "none";
     selectedUserDiv = null;
     selectedUser = null;
     selectedColor = null;
+    box.classList.remove("show");
     return;
   }
 
-  // Quitar selección previa
+  // Siempre quito selección anterior
   if (selectedUserDiv) {
-    selectedUserDiv.style.outline = 'none';
+    selectedUserDiv.style.outline = "none";
   }
 
-  // Seleccionar nuevo
-  el.style.outline = '3px solid #000';
+  // Selecciono nuevo
+  el.style.outline = "3px solid #000";
   selectedUserDiv = el;
   selectedUser = el.innerText.trim();
   selectedColor = el.style.background;
+
+  // Siempre muestro modo trabajo
+  box.classList.add("show");
 }
+
+
   
 // Limpia la selección actual (deselecciona el elemento y oculta el subtítulo)
 function clearSelectedUser() {
@@ -1173,13 +1233,16 @@ function clearSelectedUser() {
 
 
   function clearSelection() {
-    selectedUser = null;
-    document.querySelectorAll('.user').forEach(u => u.style.outline = 'none');
-    
-    const cont = document.getElementById('subtitulo-container');
-    cont.classList.remove('show');
-    setTimeout(() => cont.classList.add('hidden'), 300);
-  }
+  selectedUser = null;
+  selectedUserDiv = null;
+  selectedColor = null;
+
+  document.querySelectorAll('.user').forEach(u => u.style.outline = 'none');
+  
+  const cont = document.getElementById('subtitulo-container');
+  cont.classList.remove('show');   // solo quita show, no uses hidden
+}
+
   
 function assignUser(container) {
 
