@@ -1387,7 +1387,11 @@ function clearAll() {
   });
 }
   
-// Guardar imagen con verificación de usuarios
+
+
+
+
+
 function saveAsImage() {
   const schedule = document.getElementById("schedule-container");
   if (!schedule) {
@@ -1401,12 +1405,31 @@ function saveAsImage() {
     return;
   }
 
-  html2canvas(schedule, {
-    backgroundColor: '#ffffff',
+  // Clonar el contenedor
+ // Clonar el contenedor
+const clone = schedule.cloneNode(true);
+clone.style.position = "absolute";
+clone.style.left = "-9999px";
+clone.style.top = "0";
+clone.style.flexGrow = "0";
+clone.style.height = "auto";
+clone.style.minHeight = "auto";
+clone.style.maxHeight = "none";
+clone.style.width = schedule.scrollWidth + "px";
+
+// >>> ESPACIO EXTRA PARA QUE NO SE VEA JUNTO <<<
+clone.style.padding = "20px";        // más aire alrededor
+clone.style.background = "#ffffff"; // fondo limpio
+clone.style.boxSizing = "border-box";
+
+
+  document.body.appendChild(clone);
+
+  html2canvas(clone, {
+    backgroundColor: "#ffffff",
     scale: 2,
     useCORS: true
-  })
-  .then(canvas => {
+  }).then(canvas => {
     canvas.toBlob(blob => {
       const link = document.createElement("a");
       const fecha = new Date().toISOString().slice(0,10);
@@ -1414,13 +1437,17 @@ function saveAsImage() {
       link.href = URL.createObjectURL(blob);
       link.click();
       URL.revokeObjectURL(link.href);
+
+      clone.remove(); // borrar clon
     }, "image/png");
-  })
-  .catch(err => {
+  }).catch(err => {
+    clone.remove();
     console.error("Error al generar la imagen:", err);
     alert("Ocurrió un error al generar la imagen.");
   });
 }
+
+
 
 
 
@@ -1868,30 +1895,45 @@ function closeWeekendModal() {
   setTimeout(()=> modal.style.display="none", 300);
 }
 
-// Captura solo de la tabla y cierra modal después de confirmar
 function captureWeekendTable() {
-  const schedule = document.querySelector("#weekend-container table");
-  if (!schedule) return alert("No se encontró la tabla.");
+  const table = document.querySelector("#weekend-container table");
+  if (!table) return alert("No se encontró la tabla.");
 
-  html2canvas(schedule, { backgroundColor: '#fff', scale: 2, useCORS: true })
-    .then(canvas => {
-      canvas.toBlob(blob => {
-        const link = document.createElement("a");
-        link.download = "weekend_turnos.png";
-        link.href = URL.createObjectURL(blob);
-        link.click();
-        URL.revokeObjectURL(link.href);
-      }, "image/png");
-    })
-    .catch(err => {
-      console.error(err);
-      alert("Error al capturar la tabla");
-    });
+  // Crear contenedor temporal con aire
+  const wrapper = document.createElement("div");
+  wrapper.style.padding = "20px";
+  wrapper.style.background = "#ffffff";
+  wrapper.style.display = "inline-block";
 
-  // ❌ ya NO pongas confirmaciones aquí
-  // closeWeekendModal() solo si quieres cerrar automáticamente después de guardar
+  const clone = table.cloneNode(true);
+  wrapper.appendChild(clone);
+
+  wrapper.style.position = "absolute";
+  wrapper.style.left = "-9999px";
+  document.body.appendChild(wrapper);
+
+  html2canvas(wrapper, {
+    backgroundColor: "#ffffff",
+    scale: 2,
+    useCORS: true
+  }).then(canvas => {
+    canvas.toBlob(blob => {
+      const link = document.createElement("a");
+      link.download = "weekend_turnos.png";
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      URL.revokeObjectURL(link.href);
+      wrapper.remove();
+    }, "image/png");
+  }).catch(err => {
+    wrapper.remove();
+    console.error(err);
+    alert("Error al capturar la tabla");
+  });
+
   closeWeekendModal();
 }
+
 
 let selectedWeekendUser = null;
 let selectedWeekendColor = null;
