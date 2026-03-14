@@ -565,6 +565,48 @@ z-index: 100;
     background: #535b5d;
 }
 
+.tabla-turnos,
+
+.tabla-incidencias{
+  margin-top:20px;
+}
+
+/* espacio antes de incidencias */
+.fila-vacaciones{
+  border-top:20px solid white;
+}
+
+/* VACACIONES */
+.fila-vacaciones td{
+  background:#e8f7ff;
+}
+
+/* INCAPACIDADES */
+.fila-incapacidades td{
+  background:#ffe9e9;
+}
+
+/* PERMISOS */
+.fila-permisos td{
+  background:#fff6e5;
+}
+
+/* texto de la primera columna */
+.fila-vacaciones .area{
+  font-weight:bold;
+  color:#0077aa;
+}
+
+.fila-incapacidades .area{
+  font-weight:bold;
+  color:#c0392b;
+}
+
+.fila-permisos .area{
+  font-weight:bold;
+  color:#b9770e;
+}
+
 </style>
 </head>
 <body>
@@ -599,24 +641,32 @@ z-index: 100;
     <button onclick="openWeekendModal()">🌙 Fines de semana</button>
   </div>
 
-  <div class="schedule-container" id="schedule-container">
-    <table>
-      <thead>
-        <tr>
-          <th>Turno</th>
-          <th>Week</th>
-          <th>Lunes</th>
-          <th>Martes</th>
-          <th>Miércoles</th>
-          <th>Jueves</th>
-          <th>Viernes</th>
-          <th>Sábado</th>
-          <th>Domingo</th>
-        </tr>
-      </thead>
-      <tbody id="schedule-body"></tbody>
-    </table>
-  </div>
+<div class="schedule-container" id="schedule-container">
+
+  <!-- TABLA PRINCIPAL -->
+  <table class="tabla-turnos">
+    <thead>
+      <tr>
+        <th>Turno</th>
+        <th>Week</th>
+        <th>Lunes</th>
+        <th>Martes</th>
+        <th>Miércoles</th>
+        <th>Jueves</th>
+        <th>Viernes</th>
+        <th>Sábado</th>
+        <th>Domingo</th>
+      </tr>
+    </thead>
+
+    <tbody id="schedule-body"></tbody>
+  </table>
+
+  <!-- TABLA INCIDENCIAS -->
+  <table class="tabla-incidencias">
+    <tbody id="incidencias-body"></tbody>
+  </table>
+
 </div>
 
 <!-- Modal -->
@@ -835,7 +885,7 @@ const usuariosPredeterminados = [
   { name: "ARTURO", color: COLOR_POR_DEFECTO1 },
   { name: "CHRISTIAN", color: COLOR_POR_DEFECTO2 },
   { name: "MELANY", color: COLOR_POR_DEFECTO2 },
-  { name: "CLAUDIO", color: COLOR_POR_DEFECTO2 },
+  { name: "CRISTIAN", color: COLOR_POR_DEFECTO2 },
   { name: "VICENTE", color: COLOR_POR_DEFECTO3 },
   { name: "DANIEL", color: COLOR_POR_DEFECTO3 },
   { name: "EDGAR", color: COLOR_POR_DEFECTO3 },
@@ -854,6 +904,12 @@ const usuariosPredeterminados = [
 ];
 
   
+
+
+
+
+
+
   // ====== Mostrar Week X en la columna Week ======
   const firstJan = new Date(today.getFullYear(),0,1);
 const weekNum = Math.ceil((((today - firstJan) / 86400000) + firstJan.getDay() + 1)/7) + 1;
@@ -862,40 +918,80 @@ const weekNum = Math.ceil((((today - firstJan) / 86400000) + firstJan.getDay() +
   thWeek.style.color = "#004080";
   thWeek.style.fontWeight = "bold";
   
-  // ====== Crear tabla de turnos y áreas ======
-  turns.forEach(turn => {
-    areas.forEach((area, index) => {
-      const tr = document.createElement("tr");
-  
-      // Columna Turno
-      if(index === 0){
-        const tdTurno = document.createElement("td");
-        tdTurno.className = "turno";
-        tdTurno.rowSpan = areas.length;
-        tdTurno.innerHTML = `${turn.name}<br><small>${turn.time}</small>`;
-        tr.appendChild(tdTurno);
-      }
-  
-      // Columna Área
-      const tdArea = document.createElement("td");
-      tdArea.className = "area";
-      tdArea.innerText = area;
-      tr.appendChild(tdArea);
-  
-      // Columnas de días
-      for(let i=0; i<7; i++){
-        const td = document.createElement("td");
-        td.className = "bloque";
-        const contenedor = document.createElement("div");
-        contenedor.className = "usuarios-lista";
-        td.appendChild(contenedor);
-        td.onclick = () => assignUser(contenedor);
-        tr.appendChild(td);
-      }
-  
-      tbody.appendChild(tr);
-    });
+// ====== Crear tabla de turnos y áreas ======
+turns.forEach(turn => {
+  areas.forEach((area, index) => {
+    const tr = document.createElement("tr");
+
+    // Columna Turno
+    if(index === 0){
+      const tdTurno = document.createElement("td");
+      tdTurno.className = "turno";
+      tdTurno.rowSpan = areas.length;
+      tdTurno.innerHTML = `${turn.name}<br><small>${turn.time}</small>`;
+      tr.appendChild(tdTurno);
+    }
+
+    // Columna Área
+    const tdArea = document.createElement("td");
+    tdArea.className = "area";
+    tdArea.innerText = area;
+    tr.appendChild(tdArea);
+
+    // Columnas de días
+    for(let i=0; i<7; i++){
+      const td = document.createElement("td");
+      td.className = "bloque";
+      const contenedor = document.createElement("div");
+      contenedor.className = "usuarios-lista";
+      td.appendChild(contenedor);
+      td.onclick = () => assignUser(contenedor);
+      tr.appendChild(td);
+    }
+
+    tbody.appendChild(tr);
   });
+});
+
+
+// ===== FILAS DE VACACIONES / INCAPACIDADES / PERMISOS =====
+const incidencias = ["Vacaciones", "Incapacidades", "Permisos"];
+
+incidencias.forEach((tipo, index) => {
+
+  const tr = document.createElement("tr");
+
+  // clase según incidencia
+  if(tipo === "Vacaciones") tr.classList.add("fila-vacaciones");
+  if(tipo === "Incapacidades") tr.classList.add("fila-incapacidades");
+  if(tipo === "Permisos") tr.classList.add("fila-permisos");
+
+  const tdTipo = document.createElement("td");
+  tdTipo.className = "area";
+  tdTipo.colSpan = 2;
+  tdTipo.innerText = tipo;
+
+  tr.appendChild(tdTipo);
+
+  // días
+  for(let i = 0; i < 7; i++){
+
+    const td = document.createElement("td");
+    td.className = "bloque incidencia-celda";
+
+    const contenedor = document.createElement("div");
+    contenedor.className = "usuarios-lista";
+
+    td.appendChild(contenedor);
+
+    td.onclick = () => assignUser(contenedor);
+
+    tr.appendChild(td);
+  }
+
+  tbody.appendChild(tr);
+
+});
   
   // ====== Persistencia ======
   function saveUsersToStorage(){
@@ -2155,3 +2251,4 @@ function showConfirmDelete(message, onYes) {
 </footer>
 </body>
 </html>
+
